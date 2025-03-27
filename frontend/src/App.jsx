@@ -1,0 +1,44 @@
+import React, { useState } from 'react';
+
+function App() {
+  const [statusUrl, setStatusUrl] = useState(null);
+  const [status, setStatus] = useState(null);
+
+  const startOrchestration = async () => {
+    const response = await fetch("/api/orchestrators/Hello", { method: "POST" });
+    const result = await response.json();
+
+    // TEMP workaround: Rewrite host to match current domain
+    const uri = new URL(result.statusQueryGetUri);
+    uri.hostname = window.location.hostname;
+    uri.protocol = window.location.protocol;
+    setStatusUrl(uri.toString());
+  };
+
+  const checkStatus = async () => {
+    if (!statusUrl) return;
+    const response = await fetch(statusUrl);
+    const result = await response.json();
+    setStatus(result.runtimeStatus);
+  };
+
+  return (
+    <div className="p-4">
+      <h1 className="text-xl font-bold">Durable Function Tester</h1>
+      <button onClick={startOrchestration} className="bg-blue-500 text-white px-4 py-2 rounded mt-2">
+        Start Orchestration
+      </button>
+      {statusUrl && (
+        <div className="mt-4">
+          <p>Status URL: <code>{statusUrl}</code></p>
+          <button onClick={checkStatus} className="bg-green-500 text-white px-4 py-2 rounded mt-2">
+            Check Status
+          </button>
+          {status && <p className="mt-2">Status: {status}</p>}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default App;
