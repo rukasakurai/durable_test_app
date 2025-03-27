@@ -12,11 +12,19 @@ function App() {
   };
 
   const startOrchestration = async () => {
-    const response = await fetch("/api/orchestrators/Hello", { method: "POST" });
-    const result = await response.json();
+    try {
+      const response = await fetch("/api/orchestrators/hello_orchestrator", { method: "POST" });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const result = await response.json();
 
-    const rewrittenStatusQueryGetUri = rewriteUrl(result.statusQueryGetUri);
-    setStatusUrl(rewrittenStatusQueryGetUri);
+      const rewrittenStatusQueryGetUri = rewriteUrl(result.statusQueryGetUri);
+      setStatusUrl(rewrittenStatusQueryGetUri);
+    } catch (error) {
+      console.error("Failed to start orchestration:", error);
+      alert("Failed to start orchestration. Please try again.");
+    }
   };
 
   const checkStatus = async () => {

@@ -1,0 +1,9 @@
+# This file specifies files and directories to be ignored by Azure Functions during deployment and runtime.
+.git*
+.vscode
+__azurite_db*__.json
+__blobstorage__
+__queuestorage__
+local.settings.json
+test
+.venv
