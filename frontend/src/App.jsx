@@ -4,15 +4,19 @@ function App() {
   const [statusUrl, setStatusUrl] = useState(null);
   const [status, setStatus] = useState(null);
 
+  const rewriteUrl = (url) => {
+    const uri = new URL(url);
+    uri.hostname = window.location.hostname;
+    uri.protocol = window.location.protocol;
+    return uri.toString();
+  };
+
   const startOrchestration = async () => {
     const response = await fetch("/api/orchestrators/Hello", { method: "POST" });
     const result = await response.json();
 
-    // TEMP workaround: Rewrite host to match current domain
-    const uri = new URL(result.statusQueryGetUri);
-    uri.hostname = window.location.hostname;
-    uri.protocol = window.location.protocol;
-    setStatusUrl(uri.toString());
+    const rewrittenStatusQueryGetUri = rewriteUrl(result.statusQueryGetUri);
+    setStatusUrl(rewrittenStatusQueryGetUri);
   };
 
   const checkStatus = async () => {
