@@ -11,6 +11,9 @@ function App() {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const result = await response.json();
+
+      const uri = new URL(result.statusQueryGetUri);
+      setStatusUrl(uri.toString());
     } catch (error) {
       console.error("Failed to start orchestration:", error);
       alert("Failed to start orchestration. Please try again.");
