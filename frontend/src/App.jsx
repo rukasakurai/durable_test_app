@@ -22,7 +22,8 @@ function App() {
 
   const checkStatus = async () => {
     if (!statusUrl) return;
-    const response = await fetch(statusUrl);
+    const customStatusUrl = statusUrl.replace("/api/orchestrators/hello_orchestrator", "/api/status");
+    const response = await fetch(customStatusUrl);
     const result = await response.json();
     setStatus(result.runtimeStatus);
   };
