@@ -3,8 +3,7 @@ import azure.durable_functions as df
 
 async def main(req: func.HttpRequest, starter: str) -> func.HttpResponse:
     client = df.DurableOrchestrationClient(starter)
-    instance_id = await client.start_new("HelloOrchestrator", None)
-    
+    instance_id = await client.start_new("HelloOrchestrator")
     # Extract the correct domain using X-Forwarded-Host and X-Forwarded-Proto headers
     host = req.headers.get("X-Forwarded-Host", req.host)
     proto = req.headers.get("X-Forwarded-Proto", "http")
