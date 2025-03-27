@@ -11,12 +11,6 @@ function App() {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const result = await response.json();
-
-      // TEMP workaround: Rewrite host to match current domain
-      const uri = new URL(result.statusQueryGetUri);
-      uri.hostname = window.location.hostname;
-      uri.protocol = window.location.protocol;
-      setStatusUrl(uri.toString());
     } catch (error) {
       console.error("Failed to start orchestration:", error);
       alert("Failed to start orchestration. Please try again.");
