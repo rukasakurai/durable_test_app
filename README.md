@@ -225,7 +225,7 @@ Once both the backend and frontend are running:
 - `HttpStart/`: HTTP trigger function to start the orchestration
 - `SayHello/`: Activity function called by the orchestrator
 
-- # Recommended Reading
+# Recommended Reading
 - https://learn.microsoft.com/en-us/azure/azure-functions/durable/durable-functions-http-api
 - https://learn.microsoft.com/en-us/python/api/azure-functions-durable/azure.durable_functions.durableorchestrationclient?view=azure-python#azure-durable-functions-durableorchestrationclient-create-check-status-response
-- 
+- https://github.com/Azure/azure-functions-durable-extension/issues/1026
