@@ -137,7 +137,7 @@ azurite
 
 2. Start the React development server:
    ```
-   npm start
+   npm run dev
    ```
 
 3. Your default browser should automatically open to http://localhost:3000, showing the frontend application
