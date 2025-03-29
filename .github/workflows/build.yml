@@ -26,16 +26,24 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y azure-functions-core-tools-4
 
+      - name: Install Azurite
+        run: |
+          npm install -g azurite
+
+      - name: Start Azurite
+        run: |
+          azurite --silent &
+
       - name: Install backend dependencies
         run: |
           python -m venv .venv
           . .venv/bin/activate
           pip install -r requirements.txt
 
-      - name: Build backend
+      - name: Start backend
         run: |
           . .venv/bin/activate
-          func build
+          func start
 
   build-frontend:
     runs-on: ubuntu-latest
