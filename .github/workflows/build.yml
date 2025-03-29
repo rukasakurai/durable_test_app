@@ -26,9 +26,14 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y azure-functions-core-tools-4
 
+      - name: Update npm
+        run: |
+          npm update -g
+
       - name: Install Azurite
         run: |
           npm install -g azurite
+          azurite --version
 
       - name: Start Azurite
         run: |
@@ -55,7 +60,10 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: 20
+          node-version: 'lts/*' # Use the latest stable LTS version
+
+      - name: Print Node.js version
+        run: node -v
 
       - name: Install frontend dependencies
         run: |
