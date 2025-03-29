@@ -9,7 +9,7 @@ on:
       - '**'
 
 jobs:
-  build:
+  build-backend:
     runs-on: ubuntu-latest
 
     steps:
@@ -21,10 +21,10 @@ jobs:
         with:
           python-version: 3.11
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: 20
+      - name: Install Azure Functions Core Tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y azure-functions-core-tools-4
 
       - name: Install backend dependencies
         run: |
@@ -32,15 +32,27 @@ jobs:
           . .venv/bin/activate
           pip install -r requirements.txt
 
-      - name: Install frontend dependencies
-        run: |
-          cd frontend
-          npm install
-
       - name: Build backend
         run: |
           . .venv/bin/activate
           func build
+
+  build-frontend:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: 20
+
+      - name: Install frontend dependencies
+        run: |
+          cd frontend
+          npm install
 
       - name: Build frontend
         run: |
