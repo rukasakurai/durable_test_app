@@ -1,8 +1,16 @@
 import React, { useState } from 'react';
 
+const REACT_APP_CUSTOM_DOMAIN = process.env.REACT_APP_CUSTOM_DOMAIN;
+
 function App() {
   const [statusUrl, setStatusUrl] = useState(null);
   const [status, setStatus] = useState(null);
+
+  const rewriteUrlToCustomDomain = (url) => {
+    const parsedUrl = new URL(url);
+    parsedUrl.hostname = REACT_APP_CUSTOM_DOMAIN;
+    return parsedUrl.toString();
+  };
 
   const startOrchestration = async () => {
     try {
@@ -12,8 +20,8 @@ function App() {
       }
       const result = await response.json();
 
-      const uri = new URL(result.statusQueryGetUri);
-      setStatusUrl(uri.toString());
+      const uri = rewriteUrlToCustomDomain(result.statusQueryGetUri);
+      setStatusUrl(uri);
     } catch (error) {
       console.error("Failed to start orchestration:", error);
       alert("Failed to start orchestration. Please try again.");
