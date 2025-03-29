@@ -28,11 +28,11 @@ jobs:
 
       - name: Update npm
         run: |
-          npm update -g
+          sudo npm update -g
 
       - name: Install Azurite
         run: |
-          npm install -g azurite
+          sudo npm install -g azurite
           azurite --version
 
       - name: Start Azurite
