@@ -13,7 +13,7 @@ on:
 
 env:
   RESOURCE_GROUP: "durable-func-test-rg-${{ github.run_id }}"
-  LOCATION: "eastus"
+  LOCATION: "japaneast"
   FUNCTION_APP_NAME: "df-test-app-${{ github.run_id }}"
   STORAGE_ACCOUNT_NAME: "dfsa${{ github.run_id }}"
   APP_SERVICE_PLAN_NAME: "df-test-plan-${{ github.run_id }}"
@@ -62,10 +62,29 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Deploy Azure Functions code
+      # Azure CLI deployment approach (no Azure Functions Core Tools)
+      - name: Deploy Azure Functions code with Azure CLI
         run: |
-          pip install --upgrade azure-functions-core-tools==4.*
-          func azure functionapp publish ${{ env.FUNCTION_APP_NAME }} --python
+          # Create a deployment package (zip file)
+          echo "Creating deployment package..."
+          zip -r function_app.zip . -x "*.git*" -x "frontend/*" -x "e2e-tests/*" -x "playwright.config.js" -x "__blobstorage__/*" -x "__queuestorage__/*"
+
+          # Configure Function App settings
+          echo "Configuring Function App settings..."
+          az functionapp config appsettings set --name ${{ env.FUNCTION_APP_NAME }} \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --settings FUNCTIONS_WORKER_RUNTIME=python \
+                       FUNCTIONS_EXTENSION_VERSION=~4 \
+                       WEBSITE_RUN_FROM_PACKAGE=1 \
+                       AzureWebJobsStorage="DefaultEndpointsProtocol=https;AccountName=${{ env.STORAGE_ACCOUNT_NAME }};AccountKey=$(az storage account keys list --account-name ${{ env.STORAGE_ACCOUNT_NAME }} --resource-group ${{ env.RESOURCE_GROUP }} --query '[0].value' -o tsv);EndpointSuffix=core.windows.net"
+
+          # Deploy the zip package
+          echo "Deploying Function App..."
+          az functionapp deployment source config-zip -g ${{ env.RESOURCE_GROUP }} -n ${{ env.FUNCTION_APP_NAME }} --src function_app.zip
+
+          # Wait for deployment to complete
+          echo "Waiting for deployment to complete..."
+          sleep 30
 
       - name: Install Frontend dependencies
         working-directory: ./frontend
