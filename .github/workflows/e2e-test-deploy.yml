@@ -155,7 +155,7 @@ jobs:
       #          retention-days: 30
 
       # Clean up resources
-      - name: Clean up Azure Resources
-        if: always()
-        run: |
-          az group delete --name ${{ env.RESOURCE_GROUP }} --yes --no-wait
+#      - name: Clean up Azure Resources
+#        if: always()
+#        run: |
+#          az group delete --name ${{ env.RESOURCE_GROUP }} --yes --no-wait
