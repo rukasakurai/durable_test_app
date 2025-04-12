@@ -102,12 +102,15 @@ Before running this application locally, make sure you have the following instal
 ## Running the Application Locally
 
 ### Starting Azurite to serve as the emulator for Azure Storage
+
 To install Azurite, you can use npm:
+
 ```bash
 npm install -g azurite
 ```
 
 To start Azurite, run:
+
 ```bash
 azurite
 ```
@@ -115,15 +118,19 @@ azurite
 ### Starting the Azure Functions Backend
 
 1. Ensure your virtual environment is activated:
+
    ```
    .venv\Scripts\activate
    ```
+
    (If you're in the same terminal session from the setup steps, it should already be activated)
 
 2. In the project root directory, start the Azure Functions host:
+
    ```
    func start
    ```
+
    This will start the Azure Functions runtime locally, hosting your durable functions.
 
 3. Note the URL where your HTTP trigger function is running
@@ -131,11 +138,13 @@ azurite
 ### Starting the React Frontend
 
 1. In a separate terminal, navigate to the frontend directory:
+
    ```
    cd frontend
    ```
 
 2. Start the React development server:
+
    ```
    npm start
    ```
@@ -147,6 +156,7 @@ azurite
 ### Deploying the Azure Functions Backend
 
 1. Create an Azure Function App in the Azure portal or using Azure CLI:
+
    ```
    az group create --name myResourceGroup --location eastus
    az storage account create --name mystorageaccount --location eastus --resource-group myResourceGroup --sku Standard_LRS
@@ -154,6 +164,7 @@ azurite
    ```
 
 2. Deploy the Function App using Azure Functions Core Tools:
+
    ```
    func azure functionapp publish my-durable-function-app
    ```
@@ -166,19 +177,22 @@ azurite
 ### Deploying the Frontend (React)
 
 1. Build the production version of the React application:
+
    ```
    cd frontend
    npm run build
    ```
 
 2. Deploy the built frontend using one of these methods:
-   
+
    #### Option 1: Azure Static Web Apps
+
    ```
    az staticwebapp create --name my-static-web-app --resource-group myResourceGroup --source https://github.com/yourusername/durable_test_app --location "eastus2" --branch main --app-location "/frontend" --output-location "build"
    ```
-   
+
    #### Option 2: Azure Storage Static Website
+
    ```
    az storage account create --name mystaticwebsite --resource-group myResourceGroup --location eastus --sku Standard_LRS --kind StorageV2
    az storage blob service-properties update --account-name mystaticwebsite --static-website --index-document index.html
@@ -190,6 +204,7 @@ azurite
 ### Connecting Frontend and Backend in Azure
 
 1. Enable CORS in your Function App:
+
    - Go to your Function App in the Azure portal
    - Navigate to CORS settings
    - Add the URL of your frontend deployment (e.g., https://my-static-web-app.azurestaticapps.net)
@@ -197,6 +212,77 @@ azurite
 2. Update your frontend API configuration to use the Azure Function App URL:
    - In your React app, update API endpoints to point to your Function App URL
    - Example: `https://my-durable-function-app.azurewebsites.net/api/HttpStart`
+
+## GitHub Actions Workflow Setup
+
+This repository includes a GitHub Actions workflow that automatically deploys the application to Azure and runs end-to-end tests. To use this workflow when you fork this repository, follow these steps:
+
+### Setting up AZURE_CREDENTIALS
+
+1. **Create an App Registration in Microsoft Entra ID**:
+
+   - Sign in to the [Azure Portal](https://portal.azure.com)
+   - Navigate to **Microsoft Entra ID** > **App registrations**
+   - Click **+ New registration**
+   - Enter a name (e.g., "GitHubActionsDurableTest")
+   - Select the appropriate supported account types (usually "Accounts in this organizational directory only")
+   - Leave the Redirect URI blank
+   - Click **Register**
+
+2. **Create a Client Secret**:
+
+   - In your newly created app registration, go to **Certificates & secrets**
+   - Click **+ New client secret**
+   - Add a description (e.g., "GitHub Actions")
+   - Select an expiration period (choose a shorter period if required by your organization policy)
+   - Click **Add**
+   - **IMPORTANT**: Copy the secret value immediately as it won't be shown again
+
+3. **Assign Role to the Service Principal**:
+
+   - Navigate to **Subscriptions** in the Azure Portal
+   - Select the subscription you want to use
+   - Go to **Access control (IAM)**
+   - Click **+ Add** > **Add role assignment**
+   - Select the **Contributor** role
+   - Click **Next**
+   - Under **Assign access to**, select **Microsoft Entra user, group, or service principal**
+   - Click **+ Select members**
+   - Search for the app registration name you created earlier
+   - Select it and click **Select**
+   - Click **Review + assign**
+
+4. **Prepare Credentials JSON**:
+
+   - Create a JSON file with the following format:
+
+   ```json
+   {
+     "appId": "YOUR_APP_ID",
+     "displayName": "GitHubActionsDurableTest",
+     "password": "YOUR_CLIENT_SECRET",
+     "tenant": "YOUR_TENANT_ID"
+   }
+   ```
+
+   - Replace `YOUR_APP_ID` with the Application (client) ID from the app registration Overview page
+   - Replace `YOUR_CLIENT_SECRET` with the secret value you copied in step 2
+   - Replace `YOUR_TENANT_ID` with the Directory (tenant) ID from the app registration Overview page
+
+### Setting up GitHub Repository Secret
+
+After getting your credentials JSON (from either Option 1 or Option 2):
+
+1. Go to your GitHub repository
+2. Click on **Settings** > **Secrets and variables** > **Actions**
+3. Click on **New repository secret**
+4. Set the name to `AZURE_CREDENTIALS`
+5. Paste the entire JSON output as the value
+6. Click **Add secret**
+
+### Running the workflow
+
+The workflow will automatically run on pushes to the `main` branch. You can also manually trigger it from the "Actions" tab in your GitHub repository.
 
 ## Testing the Application
 
@@ -226,6 +312,7 @@ Once both the backend and frontend are running:
 - `SayHello/`: Activity function called by the orchestrator
 
 # Recommended Reading
+
 - https://learn.microsoft.com/en-us/azure/azure-functions/durable/durable-functions-http-api
 - https://learn.microsoft.com/en-us/python/api/azure-functions-durable/azure.durable_functions.durableorchestrationclient?view=azure-python#azure-durable-functions-durableorchestrationclient-create-check-status-response
 - https://github.com/Azure/azure-functions-durable-extension/issues/1026
