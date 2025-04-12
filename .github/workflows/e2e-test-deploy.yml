@@ -115,7 +115,7 @@ jobs:
       - name: Check Function App logs
         run: |
           echo "Checking Function App logs for common errors..."
-          az webapp log tail --name ${{ env.FUNCTION_APP_NAME }} --resource-group ${{ env.RESOURCE_GROUP }} --timeout 30
+          az webapp log tail --name ${{ env.FUNCTION_APP_NAME }} --resource-group ${{ env.RESOURCE_GROUP }}
 
       # Health-check loop to verify function deployment
       - name: Function Health Check
