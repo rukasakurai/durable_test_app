@@ -123,7 +123,6 @@ jobs:
         with:
           app-name: ${{ env.FUNCTION_APP_NAME }}
           package: function_app.zip
-          respect-funcignore: true
 
       # Health-check loop to verify function deployment
       - name: Function Health Check
