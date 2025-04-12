@@ -152,6 +152,9 @@ jobs:
 
           # Get function URLs 
           echo "=== Function URLs ==="
+          echo "Available functions:"
+          az functionapp function list --name ${{ env.FUNCTION_APP_NAME }} --resource-group ${{ env.RESOURCE_GROUP }} --query "[].name" -o tsv
+          echo "HttpStart function URL:"
           az functionapp function show --function-name HttpStart --name ${{ env.FUNCTION_APP_NAME }} --resource-group ${{ env.RESOURCE_GROUP }} --query "invokeUrlTemplate" -o tsv
 
       # Create a simplified test that just verifies the API endpoint works
