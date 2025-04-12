@@ -77,9 +77,23 @@ jobs:
       - name: Create Azure Functions deployment package
         run: |
           echo "Creating deployment package..."
-          zip -r function_app.zip . -x "*.git*" -x "frontend/*" -x "e2e-tests/*" -x "playwright.config.js" -x "__blobstorage__/*" -x "__queuestorage__/*"
-          echo "=== Zip file contents ==="
-          unzip -l function_app.zip | head -20
+          zip -r function_app.zip . -x "*.git*" -x "frontend/*" -x "e2e-tests/*" -x "playwright.config.js" -x "__blobstorage__/*" -x "__queuestorage__/*" -x "__pycache__/*" -x "**/__pycache__/*"
+
+          echo "=== Verifying function folders in ZIP ==="
+          # Check if all function folders are included in the ZIP
+          echo "HelloOrchestrator folder:"
+          unzip -l function_app.zip | grep -E "HelloOrchestrator/"
+
+          echo "HttpStart folder:"
+          unzip -l function_app.zip | grep -E "HttpStart/"
+
+          echo "SayHello folder:"
+          unzip -l function_app.zip | grep -E "SayHello/"
+
+          echo "=== Zip file contents summary ==="
+          unzip -l function_app.zip | head -10
+          echo "..."
+          unzip -l function_app.zip | tail -5
 
       # Configure Function App settings
       - name: Configure Function App settings
