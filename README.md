@@ -258,16 +258,19 @@ This repository includes a GitHub Actions workflow that automatically deploys th
 
    ```json
    {
-     "appId": "YOUR_APP_ID",
-     "displayName": "GitHubActionsDurableTest",
-     "password": "YOUR_CLIENT_SECRET",
-     "tenant": "YOUR_TENANT_ID"
+     "clientId": "YOUR_APP_ID",
+     "clientSecret": "YOUR_CLIENT_SECRET",
+     "tenantId": "YOUR_TENANT_ID",
+     "subscriptionId": "YOUR_SUBSCRIPTION_ID"
    }
    ```
 
    - Replace `YOUR_APP_ID` with the Application (client) ID from the app registration Overview page
    - Replace `YOUR_CLIENT_SECRET` with the secret value you copied in step 2
    - Replace `YOUR_TENANT_ID` with the Directory (tenant) ID from the app registration Overview page
+   - Replace `YOUR_SUBSCRIPTION_ID` with the Subscription ID you want to use for deployments
+
+   > **Note**: The Azure login action (azure/login@v2) expects the credentials in this format. If you're experiencing login issues, make sure all four parameters are included.
 
 ### Setting up GitHub Repository Secret
 
