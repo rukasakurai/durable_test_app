@@ -73,28 +73,6 @@ jobs:
           echo "=== Installed Python Packages ==="
           pip list
 
-      # Create deployment package for Azure Functions
-      - name: Create Azure Functions deployment package
-        run: |
-          echo "Creating deployment package..."
-          zip -r function_app.zip . -x "*.git*" -x "frontend/*" -x "e2e-tests/*" -x "playwright.config.js" -x "__blobstorage__/*" -x "__queuestorage__/*" -x "__pycache__/*" -x "**/__pycache__/*"
-
-          echo "=== Verifying function folders in ZIP ==="
-          # Check if all function folders are included in the ZIP
-          echo "HelloOrchestrator folder:"
-          unzip -l function_app.zip | grep -E "HelloOrchestrator/"
-
-          echo "HttpStart folder:"
-          unzip -l function_app.zip | grep -E "HttpStart/"
-
-          echo "SayHello folder:"
-          unzip -l function_app.zip | grep -E "SayHello/"
-
-          echo "=== Zip file contents summary ==="
-          unzip -l function_app.zip | head -10
-          echo "..."
-          unzip -l function_app.zip | tail -5
-
       # Configure Function App settings
       - name: Configure Function App settings
         run: |
@@ -108,8 +86,8 @@ jobs:
             --resource-group ${{ env.RESOURCE_GROUP }} \
             --settings FUNCTIONS_WORKER_RUNTIME=python \
                        FUNCTIONS_EXTENSION_VERSION=~4 \
-                       WEBSITE_RUN_FROM_PACKAGE=1 \
-                       AzureWebJobsStorage="${CONNECTION_STRING}"
+                       AzureWebJobsStorage="${CONNECTION_STRING}" \
+                       SCM_DO_BUILD_DURING_DEPLOYMENT=true
 
           # Configure CORS for Function App
           echo "Configuring CORS for Function App..."
@@ -122,7 +100,22 @@ jobs:
         uses: Azure/functions-action@v1
         with:
           app-name: ${{ env.FUNCTION_APP_NAME }}
-          package: function_app.zip
+          publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE || '' }}
+          scm-do-build-during-deployment: true
+          # Just deploy the code from this directory
+          package: ./
+
+      # Wait for function app to initialize properly
+      - name: Wait for Function App to initialize
+        run: |
+          echo "Waiting for Function App to initialize (30 seconds)..."
+          sleep 30
+
+      # Check Function App logs to ensure proper initialization
+      - name: Check Function App logs
+        run: |
+          echo "Checking Function App logs for common errors..."
+          az webapp log tail --name ${{ env.FUNCTION_APP_NAME }} --resource-group ${{ env.RESOURCE_GROUP }} --timeout 30
 
       # Health-check loop to verify function deployment
       - name: Function Health Check
