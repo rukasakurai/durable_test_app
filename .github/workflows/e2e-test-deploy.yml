@@ -57,50 +57,12 @@ jobs:
             appInsightsName=${{ env.APP_INSIGHTS_NAME }}
           deploymentName: "durable-func-deployment-${{ github.run_id }}"
 
-      - name: Debug - List Bicep Deployment Output
-        run: |
-          echo "=== Bicep Deployment Details ==="
-          az deployment group show --name "durable-func-deployment-${{ github.run_id }}" --resource-group ${{ env.RESOURCE_GROUP }} --query properties.outputs
-          echo "=== Function App Details ==="
-          az functionapp show --name ${{ env.FUNCTION_APP_NAME }} --resource-group ${{ env.RESOURCE_GROUP }} --query "{state:state, hostNames:hostNames, defaultHostName:defaultHostName}"
-          echo "=== Storage Account Details ==="
-          az storage account show --name ${{ env.STORAGE_ACCOUNT_NAME }} --resource-group ${{ env.RESOURCE_GROUP }} --query "{name:name, provisioningState:provisioningState, primaryEndpoints:primaryEndpoints}"
-
-      - name: Install Function App dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          echo "=== Installed Python Packages ==="
-          pip list
-
-      # Configure Function App settings
-      - name: Configure Function App settings
-        run: |
-          # Get storage account key
-          STORAGE_KEY=$(az storage account keys list --account-name ${{ env.STORAGE_ACCOUNT_NAME }} --resource-group ${{ env.RESOURCE_GROUP }} --query '[0].value' -o tsv)
-          CONNECTION_STRING="DefaultEndpointsProtocol=https;AccountName=${{ env.STORAGE_ACCOUNT_NAME }};AccountKey=${STORAGE_KEY};EndpointSuffix=core.windows.net"
-
-          # Configure app settings
-          echo "Configuring Function App settings..."
-          az functionapp config appsettings set --name ${{ env.FUNCTION_APP_NAME }} \
-            --resource-group ${{ env.RESOURCE_GROUP }} \
-            --settings FUNCTIONS_WORKER_RUNTIME=python \
-                       FUNCTIONS_EXTENSION_VERSION=~4 \
-                       AzureWebJobsStorage="${CONNECTION_STRING}" \
-                       SCM_DO_BUILD_DURING_DEPLOYMENT=true
-
-          # Configure CORS for Function App
-          echo "Configuring CORS for Function App..."
-          az functionapp cors add --name ${{ env.FUNCTION_APP_NAME }} \
-            --resource-group ${{ env.RESOURCE_GROUP }} \
-            --allowed-origins "http://localhost:3000"
-
       # Deploy Azure Function with the official Azure Functions GitHub Action
       - name: Deploy Azure Functions
         uses: Azure/functions-action@v1
         with:
           app-name: ${{ env.FUNCTION_APP_NAME }}
-          publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE || '' }}
+          # Removed publish-profile as it doesn't apply to dynamically created Function Apps
           scm-do-build-during-deployment: true
           # Just deploy the code from this directory
           package: ./
@@ -115,7 +77,8 @@ jobs:
       - name: Check Function App logs
         run: |
           echo "Checking Function App logs for common errors..."
-          az webapp log tail --name ${{ env.FUNCTION_APP_NAME }} --resource-group ${{ env.RESOURCE_GROUP }}
+          # Use timeout to prevent infinite hanging - log for maximum 60 seconds
+          timeout 60 az webapp log tail --name ${{ env.FUNCTION_APP_NAME }} --resource-group ${{ env.RESOURCE_GROUP }} || echo "Log streaming completed or timed out"
 
       # Health-check loop to verify function deployment
       - name: Function Health Check
