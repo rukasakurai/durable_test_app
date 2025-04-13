@@ -155,31 +155,64 @@ azurite
 
 ### Deploying the Azure Functions Backend
 
-1. Create an Azure Function App in the Azure portal or using Azure CLI:
+1. Create Azure resources using the Bicep template in the repository:
 
+   ```powershell
+   # Define variables
+   $RESOURCE_GROUP="rg-durable-functions-test"
+   $LOCATION="japaneast"
+   $FUNCTION_APP_NAME="func-durable-app"
+   $STORAGE_ACCOUNT_NAME="stdurableapp$((Get-Random -Maximum 999).ToString('000'))"
+   $APP_SERVICE_PLAN="plan-durable-app"
+   $APP_INSIGHTS_NAME="appi-durable-app"
+
+   # Log in to Azure if not already logged in
+   az login
+
+   # Create a resource group
+   az group create --name $RESOURCE_GROUP --location $LOCATION
+
+   # Deploy the Bicep template
+   az deployment group create \
+     --resource-group $RESOURCE_GROUP \
+     --template-file infra/main.bicep \
+     --parameters functionAppName=$FUNCTION_APP_NAME \
+                  storageAccountName=$STORAGE_ACCOUNT_NAME \
+                  appServicePlanName=$APP_SERVICE_PLAN \
+                  appInsightsName=$APP_INSIGHTS_NAME
    ```
-   az group create --name myResourceGroup --location eastus
-   az storage account create --name mystorageaccount --location eastus --resource-group myResourceGroup --sku Standard_LRS
-   az functionapp create --resource-group myResourceGroup --consumption-plan-location eastus --runtime python --runtime-version 3.9 --functions-version 4 --name my-durable-function-app --storage-account mystorageaccount --os-type windows
-   ```
+
+   This will create all necessary resources:
+
+   - Storage Account for the Function App
+   - App Service Plan
+   - Application Insights
+   - Function App with proper configuration
 
 2. Deploy the Function App using Azure Functions Core Tools:
 
-   ```
-   func azure functionapp publish my-durable-function-app
+   ```powershell
+   # Deploy the function app
+   func azure functionapp publish $FUNCTION_APP_NAME
    ```
 
-3. After deployment, configure application settings in the Azure portal:
-   - Go to your Function App in the Azure portal
-   - Navigate to Configuration > Application settings
-   - Add necessary settings (if needed for your app)
+3. After deployment, you can view the Function App URL in the outputs of the Bicep deployment or in the Azure portal:
+
+   ```powershell
+   # Get the function app URL
+   $FUNCTION_APP_URL=$(az functionapp show --name $FUNCTION_APP_NAME --resource-group $RESOURCE_GROUP --query "defaultHostName" -o tsv)
+   echo "Function App URL: https://$FUNCTION_APP_URL"
+   ```
 
 ### Deploying the Frontend (React)
 
 1. Build the production version of the React application:
 
-   ```
+   ```powershell
+   # Navigate to frontend directory
    cd frontend
+
+   # Build the React app
    npm run build
    ```
 
@@ -187,31 +220,69 @@ azurite
 
    #### Option 1: Azure Static Web Apps
 
-   ```
-   az staticwebapp create --name my-static-web-app --resource-group myResourceGroup --source https://github.com/yourusername/durable_test_app --location "eastus2" --branch main --app-location "/frontend" --output-location "build"
+   ```powershell
+   # Define variables
+   $STATIC_WEB_APP_NAME="stapp-durable-frontend"
+
+   # Create and deploy Static Web App
+   az staticwebapp create \
+     --name $STATIC_WEB_APP_NAME \
+     --resource-group $RESOURCE_GROUP \
+     --source https://github.com/yourusername/durable_test_app \
+     --location "eastus2" \
+     --branch main \
+     --app-location "/frontend" \
+     --output-location "build"
    ```
 
    #### Option 2: Azure Storage Static Website
 
+   ```powershell
+   # Define variables
+   $STORAGE_WEB_NAME="stwebdurable$((Get-Random -Maximum 999).ToString('000'))"
+
+   # Create storage account
+   az storage account create \
+     --name $STORAGE_WEB_NAME \
+     --resource-group $RESOURCE_GROUP \
+     --location $LOCATION \
+     --sku Standard_LRS \
+     --kind StorageV2
+
+   # Enable static website feature
+   az storage blob service-properties update \
+     --account-name $STORAGE_WEB_NAME \
+     --static-website \
+     --index-document index.html
+
+   # Upload the built files
+   az storage blob upload-batch \
+     --account-name $STORAGE_WEB_NAME \
+     --source frontend/build \
+     --destination '$web'
+
+   # Get the static website URL
+   $STATIC_WEBSITE_URL=$(az storage account show \
+     --name $STORAGE_WEB_NAME \
+     --resource-group $RESOURCE_GROUP \
+     --query "primaryEndpoints.web" \
+     --output tsv)
+   echo "Static Website URL: $STATIC_WEBSITE_URL"
    ```
-   az storage account create --name mystaticwebsite --resource-group myResourceGroup --location eastus --sku Standard_LRS --kind StorageV2
-   az storage blob service-properties update --account-name mystaticwebsite --static-website --index-document index.html
-   az storage blob upload-batch --account-name mystaticwebsite --source frontend/build --destination '$web'
+
+3. Update CORS settings in your Function App to allow the frontend domain:
+
+   ```powershell
+   # Add CORS origin for the static website
+   az functionapp cors add \
+     --name $FUNCTION_APP_NAME \
+     --resource-group $RESOURCE_GROUP \
+     --allowed-origins $STATIC_WEBSITE_URL
    ```
 
-3. Update the API URL in your frontend production build to point to your Azure Function App URL before deploying
-
-### Connecting Frontend and Backend in Azure
-
-1. Enable CORS in your Function App:
-
-   - Go to your Function App in the Azure portal
-   - Navigate to CORS settings
-   - Add the URL of your frontend deployment (e.g., https://my-static-web-app.azurestaticapps.net)
-
-2. Update your frontend API configuration to use the Azure Function App URL:
+4. Update your frontend API configuration to use the Azure Function App URL:
    - In your React app, update API endpoints to point to your Function App URL
-   - Example: `https://my-durable-function-app.azurewebsites.net/api/HttpStart`
+   - Example: `https://$FUNCTION_APP_URL/api/HttpStart`
 
 ## GitHub Actions Workflow Setup
 
