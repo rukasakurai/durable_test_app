@@ -66,22 +66,27 @@ Before running this application locally, make sure you have the following instal
 - [Azure Functions Core Tools v4](https://learn.microsoft.com/en-us/azure/azure-functions/functions-run-local?tabs=windows%2Cisolated-process%2Cnode-v4%2Cpython-v2%2Chttp-trigger%2Ccontainer-apps&pivots=programming-language-python#install-the-azure-functions-core-tools)
 - [Visual Studio Code](https://code.visualstudio.com/) (recommended)
 - [Azure Functions extension for VS Code](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azurefunctions) (optional)
-- PowerShell 7
+- PowerShell 7 or WSL2
 
 ## Setup Instructions
 
 ### Setting Up the Backend (Azure Functions)
 
-1. Open a PowerShell 7 terminal
+1. Open a terminal (PowerShell 7 or WSL2).
 2. Navigate to the project root directory:
 3. Create a Python virtual environment:
    ```
    python -m venv .venv
    ```
 4. Activate the virtual environment:
-   ```
-   .venv\Scripts\activate
-   ```
+   - **PowerShell 7**:
+     ```
+     .venv\Scripts\activate
+     ```
+   - **WSL2**:
+     ```
+     source .venv/bin/activate
+     ```
 5. Install the required Python packages:
    ```
    pip install -r requirements.txt
@@ -89,7 +94,7 @@ Before running this application locally, make sure you have the following instal
 
 ### Setting Up the Frontend (React)
 
-1. Open a new PowerShell 7 terminal
+1. Open a terminal (PowerShell 7 or WSL2).
 2. Navigate to the frontend directory:
    ```
    cd frontend
@@ -119,11 +124,16 @@ azurite
 
 1. Ensure your virtual environment is activated:
 
-   ```
-   .venv\Scripts\activate
-   ```
+   - **PowerShell 7**:
+     ```
+     .venv\Scripts\activate
+     ```
+   - **WSL2**:
+     ```
+     source .venv/bin/activate
+     ```
 
-   (If you're in the same terminal session from the setup steps, it should already be activated)
+   (If you're in the same terminal session from the setup steps, it should already be activated.)
 
 2. In the project root directory, start the Azure Functions host:
 
@@ -133,7 +143,7 @@ azurite
 
    This will start the Azure Functions runtime locally, hosting your durable functions.
 
-3. Note the URL where your HTTP trigger function is running
+3. Note the URL where your HTTP trigger function is running.
 
 ### Starting the React Frontend
 
@@ -149,7 +159,7 @@ azurite
    npm start
    ```
 
-3. Your default browser should automatically open to http://localhost:3000, showing the frontend application
+3. Your default browser should automatically open to http://localhost:3000, showing the frontend application.
 
 ## Deploying to Azure
 
@@ -162,10 +172,24 @@ azurite
    $RESOURCE_GROUP="rg-durable-functions-test"
    $LOCATION="japaneast"
    $FUNCTION_APP_NAME="func-durable-app"
-   $STORAGE_ACCOUNT_NAME="stdurableapp$((Get-Random -Maximum 999).ToString('000'))"
    $APP_SERVICE_PLAN="plan-durable-app"
    $APP_INSIGHTS_NAME="appi-durable-app"
+   ```
 
+   To generate a random storage account name:
+
+   - **For PowerShell 7**: Use the following command:
+
+     ```powershell
+     $STORAGE_ACCOUNT_NAME="stdurableapp$((Get-Random -Maximum 999).ToString('000'))"
+     ```
+
+   - **For WSL2**: Use the following command:
+     ```bash
+     STORAGE_ACCOUNT_NAME=$(printf "stdurableapp%03d" $((RANDOM % 1000)))
+     ```
+
+   ```powershell
    # Log in to Azure if not already logged in
    az login
 
