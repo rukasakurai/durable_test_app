@@ -2,14 +2,15 @@ name: Deploy and Test Azure Function
 
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths-ignore:
-      - "**.md"
-  pull_request:
-    branches: [main]
-    paths-ignore:
-      - "**.md"
+  # Temporarily commenting out automatic triggers
+  # push:
+  #   branches: [main]
+  #   paths-ignore:
+  #     - "**.md"
+  # pull_request:
+  #   branches: [main]
+  #   paths-ignore:
+  #     - "**.md"
 
 env:
   RESOURCE_GROUP: "durable-func-test-rg-${{ github.run_id }}"

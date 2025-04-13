@@ -81,7 +81,7 @@ jobs:
         run: |
           func start &
           echo "Waiting for Azure Functions to start..."
-          sleep 15
+          sleep 30
 
       - name: Check if Azure Functions are running
         run: |
@@ -92,13 +92,24 @@ jobs:
             cat $(find . -name "func_host_logs.txt" 2>/dev/null || echo "No log file found")
             exit 1
           fi
+          echo "Azure Functions are running correctly!"
 
       - name: Start frontend server for UI tests
         run: |
           cd frontend
           npx serve -s build -l 3000 &
           echo "Waiting for frontend server to start..."
-          sleep 10
+          sleep 20
+
+      - name: Verify frontend is accessible
+        run: |
+          response=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000 || echo "Failed to connect")
+          echo "Frontend server status code: $response"
+          if [[ "$response" != "2"* ]]; then
+            echo "Frontend server not running properly."
+            exit 1
+          fi
+          echo "Frontend server is running correctly!"
 
       - name: Install Playwright
         run: |
