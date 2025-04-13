@@ -93,13 +93,20 @@ jobs:
             exit 1
           fi
 
+      - name: Start frontend server for UI tests
+        run: |
+          cd frontend
+          npx serve -s build -l 3000 &
+          echo "Waiting for frontend server to start..."
+          sleep 10
+
       - name: Install Playwright
         run: |
           npm init -y
           npm install -D @playwright/test
           npx playwright install --with-deps chromium
 
-      - name: Update Playwright test for local environment
+      - name: Update Playwright test for complete user journey
         run: |
           mkdir -p e2e-tests
           cat > e2e-tests/durable-function-test.spec.js << 'EOF'
@@ -123,6 +130,42 @@ jobs:
             // Verify that the response contains a statusQueryGetUri
             expect(responseBody.statusQueryGetUri).toBeTruthy();
             console.log('StatusQueryGetUri:', responseBody.statusQueryGetUri);
+          });
+
+          test('should complete the full user journey - start orchestration, check status, and verify completion', async ({ page }) => {
+            // Navigate to the React app
+            await page.goto('http://localhost:3000');
+            console.log('Navigated to frontend app');
+            
+            // Click the "Start Orchestration" button
+            await page.click('button:has-text("Start Orchestration")');
+            console.log('Clicked Start Orchestration button');
+            
+            // Wait for the status URL to appear
+            const statusUrlElement = await page.waitForSelector('code', { timeout: 30000 });
+            const statusUrl = await statusUrlElement.textContent();
+            console.log('Status URL found:', statusUrl);
+            
+            // Verify that it's a valid URI
+            expect(statusUrl).toBeTruthy();
+            expect(statusUrl).toContain('http');
+            
+            // Wait a moment for the orchestration to complete
+            // This is necessary because Durable Functions take some time to complete
+            await page.waitForTimeout(3000);
+            
+            // Click the "Check Status" button
+            await page.click('button:has-text("Check Status")');
+            console.log('Clicked Check Status button');
+            
+            // Wait for the status text to appear
+            const statusText = await page.waitForSelector('p:has-text("Status:")', { timeout: 30000 });
+            const status = await statusText.textContent();
+            console.log('Status found:', status);
+            
+            // Verify that the status shows "Completed"
+            expect(status).toContain('Completed');
+            console.log('Successfully verified status is Completed');
           });
           EOF
 
