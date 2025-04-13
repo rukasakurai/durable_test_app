@@ -18,6 +18,7 @@ env:
   STORAGE_ACCOUNT_NAME: "dfsa${{ github.run_id }}"
   APP_SERVICE_PLAN_NAME: "df-test-plan-${{ github.run_id }}"
   APP_INSIGHTS_NAME: "df-test-ai-${{ github.run_id }}"
+  STATIC_WEB_APP_NAME: "df-swa-${{ github.run_id }}"
 
 jobs:
   deploy-and-test:
@@ -55,6 +56,7 @@ jobs:
             storageAccountName=${{ env.STORAGE_ACCOUNT_NAME }}
             appServicePlanName=${{ env.APP_SERVICE_PLAN_NAME }}
             appInsightsName=${{ env.APP_INSIGHTS_NAME }}
+            staticWebAppName=${{ env.STATIC_WEB_APP_NAME }}
           deploymentName: "durable-func-deployment-${{ github.run_id }}"
 
       # Health-check loop to verify function app infrastructure is ready
