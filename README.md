@@ -216,9 +216,7 @@ azurite
    npm run build
    ```
 
-2. Deploy the built frontend using one of these methods:
-
-   #### Option 1: Azure Static Web Apps
+2. Deploy the built frontend
 
    ```powershell
    # Define variables
@@ -233,41 +231,6 @@ azurite
      --branch main \
      --app-location "/frontend" \
      --output-location "build"
-   ```
-
-   #### Option 2: Azure Storage Static Website
-
-   ```powershell
-   # Define variables
-   $STORAGE_WEB_NAME="stwebdurable$((Get-Random -Maximum 999).ToString('000'))"
-
-   # Create storage account
-   az storage account create \
-     --name $STORAGE_WEB_NAME \
-     --resource-group $RESOURCE_GROUP \
-     --location $LOCATION \
-     --sku Standard_LRS \
-     --kind StorageV2
-
-   # Enable static website feature
-   az storage blob service-properties update \
-     --account-name $STORAGE_WEB_NAME \
-     --static-website \
-     --index-document index.html
-
-   # Upload the built files
-   az storage blob upload-batch \
-     --account-name $STORAGE_WEB_NAME \
-     --source frontend/build \
-     --destination '$web'
-
-   # Get the static website URL
-   $STATIC_WEBSITE_URL=$(az storage account show \
-     --name $STORAGE_WEB_NAME \
-     --resource-group $RESOURCE_GROUP \
-     --query "primaryEndpoints.web" \
-     --output tsv)
-   echo "Static Website URL: $STATIC_WEBSITE_URL"
    ```
 
 3. Update CORS settings in your Function App to allow the frontend domain:
