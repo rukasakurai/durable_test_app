@@ -13,6 +13,9 @@
         },
         "appInsightsName": {
             "value": "df-test-ai-${uniqueString(resourceGroup().id)}"
+        },
+        "staticWebAppName": {
+            "value": "df-test-swa-${uniqueString(resourceGroup().id)}"
         }
     }
 }
