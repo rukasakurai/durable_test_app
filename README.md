@@ -102,12 +102,15 @@ Before running this application locally, make sure you have the following instal
 ## Running the Application Locally
 
 ### Starting Azurite to serve as the emulator for Azure Storage
+
 To install Azurite, you can use npm:
+
 ```bash
 npm install -g azurite
 ```
 
 To start Azurite, run:
+
 ```bash
 azurite
 ```
@@ -115,15 +118,19 @@ azurite
 ### Starting the Azure Functions Backend
 
 1. Ensure your virtual environment is activated:
+
    ```
    .venv\Scripts\activate
    ```
+
    (If you're in the same terminal session from the setup steps, it should already be activated)
 
 2. In the project root directory, start the Azure Functions host:
+
    ```
    func start
    ```
+
    This will start the Azure Functions runtime locally, hosting your durable functions.
 
 3. Note the URL where your HTTP trigger function is running
@@ -131,11 +138,13 @@ azurite
 ### Starting the React Frontend
 
 1. In a separate terminal, navigate to the frontend directory:
+
    ```
    cd frontend
    ```
 
 2. Start the React development server:
+
    ```
    npm start
    ```
@@ -146,57 +155,208 @@ azurite
 
 ### Deploying the Azure Functions Backend
 
-1. Create an Azure Function App in the Azure portal or using Azure CLI:
+1. Create Azure resources using the Bicep template in the repository:
+
+   ```powershell
+   # Define variables
+   $RESOURCE_GROUP="rg-durable-functions-test"
+   $LOCATION="japaneast"
+   $FUNCTION_APP_NAME="func-durable-app"
+   $STORAGE_ACCOUNT_NAME="stdurableapp$((Get-Random -Maximum 999).ToString('000'))"
+   $APP_SERVICE_PLAN="plan-durable-app"
+   $APP_INSIGHTS_NAME="appi-durable-app"
+
+   # Log in to Azure if not already logged in
+   az login
+
+   # Create a resource group
+   az group create --name $RESOURCE_GROUP --location $LOCATION
+
+   # Deploy the Bicep template
+   az deployment group create \
+     --resource-group $RESOURCE_GROUP \
+     --template-file infra/main.bicep \
+     --parameters functionAppName=$FUNCTION_APP_NAME \
+                  storageAccountName=$STORAGE_ACCOUNT_NAME \
+                  appServicePlanName=$APP_SERVICE_PLAN \
+                  appInsightsName=$APP_INSIGHTS_NAME
    ```
-   az group create --name myResourceGroup --location eastus
-   az storage account create --name mystorageaccount --location eastus --resource-group myResourceGroup --sku Standard_LRS
-   az functionapp create --resource-group myResourceGroup --consumption-plan-location eastus --runtime python --runtime-version 3.9 --functions-version 4 --name my-durable-function-app --storage-account mystorageaccount --os-type windows
-   ```
+
+   This will create all necessary resources:
+
+   - Storage Account for the Function App
+   - App Service Plan
+   - Application Insights
+   - Function App with proper configuration
 
 2. Deploy the Function App using Azure Functions Core Tools:
-   ```
-   func azure functionapp publish my-durable-function-app
+
+   ```powershell
+   # Deploy the function app
+   func azure functionapp publish $FUNCTION_APP_NAME
    ```
 
-3. After deployment, configure application settings in the Azure portal:
-   - Go to your Function App in the Azure portal
-   - Navigate to Configuration > Application settings
-   - Add necessary settings (if needed for your app)
+3. After deployment, you can view the Function App URL in the outputs of the Bicep deployment or in the Azure portal:
+
+   ```powershell
+   # Get the function app URL
+   $FUNCTION_APP_URL=$(az functionapp show --name $FUNCTION_APP_NAME --resource-group $RESOURCE_GROUP --query "defaultHostName" -o tsv)
+   echo "Function App URL: https://$FUNCTION_APP_URL"
+   ```
 
 ### Deploying the Frontend (React)
 
 1. Build the production version of the React application:
-   ```
+
+   ```powershell
+   # Navigate to frontend directory
    cd frontend
+
+   # Build the React app
    npm run build
    ```
 
 2. Deploy the built frontend using one of these methods:
-   
+
    #### Option 1: Azure Static Web Apps
+
+   ```powershell
+   # Define variables
+   $STATIC_WEB_APP_NAME="stapp-durable-frontend"
+
+   # Create and deploy Static Web App
+   az staticwebapp create \
+     --name $STATIC_WEB_APP_NAME \
+     --resource-group $RESOURCE_GROUP \
+     --source https://github.com/yourusername/durable_test_app \
+     --location "eastus2" \
+     --branch main \
+     --app-location "/frontend" \
+     --output-location "build"
    ```
-   az staticwebapp create --name my-static-web-app --resource-group myResourceGroup --source https://github.com/yourusername/durable_test_app --location "eastus2" --branch main --app-location "/frontend" --output-location "build"
-   ```
-   
+
    #### Option 2: Azure Storage Static Website
+
+   ```powershell
+   # Define variables
+   $STORAGE_WEB_NAME="stwebdurable$((Get-Random -Maximum 999).ToString('000'))"
+
+   # Create storage account
+   az storage account create \
+     --name $STORAGE_WEB_NAME \
+     --resource-group $RESOURCE_GROUP \
+     --location $LOCATION \
+     --sku Standard_LRS \
+     --kind StorageV2
+
+   # Enable static website feature
+   az storage blob service-properties update \
+     --account-name $STORAGE_WEB_NAME \
+     --static-website \
+     --index-document index.html
+
+   # Upload the built files
+   az storage blob upload-batch \
+     --account-name $STORAGE_WEB_NAME \
+     --source frontend/build \
+     --destination '$web'
+
+   # Get the static website URL
+   $STATIC_WEBSITE_URL=$(az storage account show \
+     --name $STORAGE_WEB_NAME \
+     --resource-group $RESOURCE_GROUP \
+     --query "primaryEndpoints.web" \
+     --output tsv)
+   echo "Static Website URL: $STATIC_WEBSITE_URL"
    ```
-   az storage account create --name mystaticwebsite --resource-group myResourceGroup --location eastus --sku Standard_LRS --kind StorageV2
-   az storage blob service-properties update --account-name mystaticwebsite --static-website --index-document index.html
-   az storage blob upload-batch --account-name mystaticwebsite --source frontend/build --destination '$web'
+
+3. Update CORS settings in your Function App to allow the frontend domain:
+
+   ```powershell
+   # Add CORS origin for the static website
+   az functionapp cors add \
+     --name $FUNCTION_APP_NAME \
+     --resource-group $RESOURCE_GROUP \
+     --allowed-origins $STATIC_WEBSITE_URL
    ```
 
-3. Update the API URL in your frontend production build to point to your Azure Function App URL before deploying
-
-### Connecting Frontend and Backend in Azure
-
-1. Enable CORS in your Function App:
-   - Go to your Function App in the Azure portal
-   - Navigate to CORS settings
-   - Add the URL of your frontend deployment (e.g., https://my-static-web-app.azurestaticapps.net)
-
-2. Update your frontend API configuration to use the Azure Function App URL:
+4. Update your frontend API configuration to use the Azure Function App URL:
    - In your React app, update API endpoints to point to your Function App URL
-   - Example: `https://my-durable-function-app.azurewebsites.net/api/HttpStart`
+   - Example: `https://$FUNCTION_APP_URL/api/HttpStart`
+
+## GitHub Actions Workflow Setup
+
+This repository includes a GitHub Actions workflow that automatically deploys the application to Azure and runs end-to-end tests. To use this workflow when you fork this repository, follow these steps:
+
+### Setting up AZURE_CREDENTIALS
+
+1. **Create an App Registration in Microsoft Entra ID**:
+
+   - Sign in to the [Azure Portal](https://portal.azure.com)
+   - Navigate to **Microsoft Entra ID** > **App registrations**
+   - Click **+ New registration**
+   - Enter a name (e.g., "GitHubActionsDurableTest")
+   - Select the appropriate supported account types (usually "Accounts in this organizational directory only")
+   - Leave the Redirect URI blank
+   - Click **Register**
+
+2. **Create a Client Secret**:
+
+   - In your newly created app registration, go to **Certificates & secrets**
+   - Click **+ New client secret**
+   - Add a description (e.g., "GitHub Actions")
+   - Select an expiration period (choose a shorter period if required by your organization policy)
+   - Click **Add**
+   - **IMPORTANT**: Copy the secret value immediately as it won't be shown again
+
+3. **Assign Role to the Service Principal**:
+
+   - Navigate to **Subscriptions** in the Azure Portal
+   - Select the subscription you want to use
+   - Go to **Access control (IAM)**
+   - Click **+ Add** > **Add role assignment**
+   - Select the **Contributor** role
+   - Click **Next**
+   - Under **Assign access to**, select **Microsoft Entra user, group, or service principal**
+   - Click **+ Select members**
+   - Search for the app registration name you created earlier
+   - Select it and click **Select**
+   - Click **Review + assign**
+
+4. **Prepare Credentials JSON**:
+
+   - Create a JSON file with the following format:
+
+   ```json
+   {
+     "clientId": "YOUR_APP_ID",
+     "clientSecret": "YOUR_CLIENT_SECRET",
+     "tenantId": "YOUR_TENANT_ID",
+     "subscriptionId": "YOUR_SUBSCRIPTION_ID"
+   }
+   ```
+
+   - Replace `YOUR_APP_ID` with the Application (client) ID from the app registration Overview page
+   - Replace `YOUR_CLIENT_SECRET` with the secret value you copied in step 2
+   - Replace `YOUR_TENANT_ID` with the Directory (tenant) ID from the app registration Overview page
+   - Replace `YOUR_SUBSCRIPTION_ID` with the Subscription ID you want to use for deployments
+
+   > **Note**: The Azure login action (azure/login@v2) expects the credentials in this format. If you're experiencing login issues, make sure all four parameters are included.
+
+### Setting up GitHub Repository Secret
+
+After getting your credentials JSON (from either Option 1 or Option 2):
+
+1. Go to your GitHub repository
+2. Click on **Settings** > **Secrets and variables** > **Actions**
+3. Click on **New repository secret**
+4. Set the name to `AZURE_CREDENTIALS`
+5. Paste the entire JSON output as the value
+6. Click **Add secret**
+
+### Running the workflow
+
+The workflow will automatically run on pushes to the `main` branch. You can also manually trigger it from the "Actions" tab in your GitHub repository.
 
 ## Testing the Application
 
@@ -207,6 +367,41 @@ Once both the backend and frontend are running:
    ```
    http://localhost:7071/api/HttpStart  # For local testing
    https://my-durable-function-app.azurewebsites.net/api/HttpStart  # For Azure deployment
+   ```
+
+### Running End-to-End Tests Locally with Playwright
+
+To manually run the E2E tests using Playwright on your Windows PC:
+
+1. Make sure both the Azure Functions backend and the React frontend are running:
+
+   - Backend should be running on http://localhost:7071
+   - Frontend should be running on http://localhost:3000
+
+2. Open a PowerShell 7 terminal in the project root directory
+
+3. Install Playwright and its dependencies (if not already installed):
+
+   ```powershell
+   npm install -D @playwright/test
+   npx playwright install --with-deps chromium
+   ```
+
+4. Run the Playwright tests:
+
+   ```powershell
+   npx playwright test
+   ```
+
+5. To run tests with a visible browser (non-headless mode), use:
+
+   ```powershell
+   npx playwright test --headed
+   ```
+
+6. To open the HTML report after test execution:
+   ```powershell
+   npx playwright show-report
    ```
 
 ## Troubleshooting
@@ -226,6 +421,7 @@ Once both the backend and frontend are running:
 - `SayHello/`: Activity function called by the orchestrator
 
 # Recommended Reading
+
 - https://learn.microsoft.com/en-us/azure/azure-functions/durable/durable-functions-http-api
 - https://learn.microsoft.com/en-us/python/api/azure-functions-durable/azure.durable_functions.durableorchestrationclient?view=azure-python#azure-durable-functions-durableorchestrationclient-create-check-status-response
 - https://github.com/Azure/azure-functions-durable-extension/issues/1026

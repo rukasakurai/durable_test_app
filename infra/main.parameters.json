@@ -1,0 +1,18 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "functionAppName": {
+            "value": "df-test-app-${uniqueString(resourceGroup().id)}"
+        },
+        "storageAccountName": {
+            "value": "dfsa${uniqueString(resourceGroup().id)}"
+        },
+        "appServicePlanName": {
+            "value": "df-test-plan-${uniqueString(resourceGroup().id)}"
+        },
+        "appInsightsName": {
+            "value": "df-test-ai-${uniqueString(resourceGroup().id)}"
+        }
+    }
+}

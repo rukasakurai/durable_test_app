@@ -1,0 +1,205 @@
+name: Deploy and Test Azure Function
+
+on:
+  workflow_dispatch:
+#  push:
+#    branches: [main]
+#    paths-ignore:
+#      - "**.md"
+#  pull_request:
+#    branches: [main]
+#    paths-ignore:
+#      - "**.md"
+
+env:
+  RESOURCE_GROUP: "durable-func-test-rg-${{ github.run_id }}"
+  LOCATION: "japaneast"
+  FUNCTION_APP_NAME: "df-test-app-${{ github.run_id }}"
+  STORAGE_ACCOUNT_NAME: "dfsa${{ github.run_id }}"
+  APP_SERVICE_PLAN_NAME: "df-test-plan-${{ github.run_id }}"
+  APP_INSIGHTS_NAME: "df-test-ai-${{ github.run_id }}"
+
+jobs:
+  deploy-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Create Resource Group
+        run: |
+          az group create --name ${{ env.RESOURCE_GROUP }} --location ${{ env.LOCATION }}
+
+      - name: Deploy Azure Resources with Bicep
+        uses: azure/arm-deploy@v2
+        with:
+          resourceGroupName: ${{ env.RESOURCE_GROUP }}
+          template: ./infra/main.bicep
+          parameters: >
+            functionAppName=${{ env.FUNCTION_APP_NAME }}
+            storageAccountName=${{ env.STORAGE_ACCOUNT_NAME }}
+            appServicePlanName=${{ env.APP_SERVICE_PLAN_NAME }}
+            appInsightsName=${{ env.APP_INSIGHTS_NAME }}
+          deploymentName: "durable-func-deployment-${{ github.run_id }}"
+
+      # Health-check loop to verify function app infrastructure is ready
+      - name: Check Function App Infrastructure
+        run: |
+          echo "Verifying function app infrastructure is ready..."
+          timeout=300  # 5 minutes timeout
+          interval=10  # Check every 10 seconds
+          endpoint="https://${{ env.FUNCTION_APP_NAME }}.azurewebsites.net"
+
+          start_time=$(date +%s)
+          end_time=$((start_time + timeout))
+
+          while [ $(date +%s) -lt $end_time ]; do
+            echo "Checking function app infrastructure at $(date)..."
+            
+            status_code=$(curl -s -o /dev/null -w "%{http_code}" -X GET "${endpoint}")
+            
+            echo "Received status code: $status_code"
+            
+            # We might get a 200, 403, or 404 when the app is provisioned but not yet deployed
+            # Any of these codes means the infrastructure is ready
+            if [ $status_code -eq 200 ] || [ $status_code -eq 403 ] || [ $status_code -eq 404 ]; then
+              echo "✅ Function app infrastructure is ready with status code: $status_code"
+              break
+            else
+              echo "⏳ Function app infrastructure is not ready yet, status code: $status_code. Waiting $interval seconds..."
+              sleep $interval
+            fi
+          done
+
+          # Check if we exited due to timeout
+          if [ $(date +%s) -ge $end_time ]; then
+            echo "❌ Infrastructure check failed - Function app did not become available within timeout period"
+            exit 1
+          fi
+
+          echo "Function app infrastructure is verified successfully!"
+
+      # Deploy Azure Function with the official Azure Functions GitHub Action
+      - name: Deploy Azure Functions
+        uses: Azure/functions-action@v1
+        with:
+          app-name: ${{ env.FUNCTION_APP_NAME }}
+          # Removed publish-profile as it doesn't apply to dynamically created Function Apps
+          scm-do-build-during-deployment: true
+          # Just deploy the code from this directory
+          package: ./
+
+      # Wait for function app to initialize properly
+      - name: Wait for Function App to initialize
+        run: |
+          echo "Waiting for Function App to initialize (30 seconds)..."
+          sleep 30
+
+      # Health-check loop to verify function deployment
+      - name: Function Health Check
+        run: |
+          echo "Starting health check for function app..."
+          timeout=300  # 5 minutes timeout
+          interval=10  # Check every 10 seconds
+          endpoint="https://${{ env.FUNCTION_APP_NAME }}.azurewebsites.net/api/orchestrators/hello_orchestrator"
+
+          start_time=$(date +%s)
+          end_time=$((start_time + timeout))
+
+          while [ $(date +%s) -lt $end_time ]; do
+            echo "Checking function health at $(date)..."
+            
+            status_code=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${endpoint}")
+            
+            echo "Received status code: $status_code"
+            
+            # Check if status code is successful (2xx)
+            if [ $status_code -ge 200 ] && [ $status_code -lt 300 ]; then
+              echo "✅ Function is healthy and responding with status code: $status_code"
+              break
+            else
+              echo "⏳ Function is not ready yet, status code: $status_code. Waiting $interval seconds..."
+              sleep $interval
+            fi
+          done
+
+          # Check if we exited due to timeout
+          if [ $(date +%s) -ge $end_time ]; then
+            echo "❌ Health check failed - Function did not become healthy within timeout period"
+            exit 1
+          fi
+
+          echo "Function app deployment verified successfully!"
+
+      # Start the frontend React app locally for testing
+      - name: Set up and start frontend React app
+        run: |
+          cd frontend
+          npm install
+
+          # Create a .env file with the Azure Function URL
+          echo "REACT_APP_FUNCTION_URL=https://${{ env.FUNCTION_APP_NAME }}.azurewebsites.net" > .env
+
+          # Start the React app in the background
+          echo "Starting React app in background..."
+          npm start &
+
+          # Allow time for React app to start
+          echo "Waiting for React app to start up (30 seconds)..."
+          sleep 30
+
+          # Verify that the React app is running
+          echo "Verifying React app is running..."
+          if curl -s http://localhost:3000 | grep -q "React App"; then
+            echo "✅ React app is running successfully"
+          else
+            echo "⚠️ React app might not be fully started yet, but continuing anyway..."
+          fi
+
+      # Update the Playwright test file to use deployed function endpoint but keep local frontend
+      - name: Update Playwright test for deployment
+        run: |
+          # Create a modified version of the test file that uses the deployed function but local frontend
+          sed "s|http://localhost:7071/api/orchestrators/HelloOrchestrator|https://${{ env.FUNCTION_APP_NAME }}.azurewebsites.net/api/orchestrators/hello_orchestrator|g" \
+              e2e-tests/durable-function-test.spec.js > e2e-tests/durable-function-azure-test.spec.js
+
+          # Print the modified file for debugging
+          echo "Modified test file content:"
+          cat e2e-tests/durable-function-azure-test.spec.js
+
+      - name: Install Playwright
+        run: |
+          npm install
+          npx playwright install --with-deps chromium
+
+      - name: Run Playwright Tests
+        run: npx playwright test e2e-tests/durable-function-azure-test.spec.js
+
+      - name: Upload Playwright Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30
+
+      # Clean up resources
+      - name: Clean up Azure Resources
+        if: always()
+        run: |
+          az group delete --name ${{ env.RESOURCE_GROUP }} --yes --no-wait
