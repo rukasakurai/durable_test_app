@@ -2,15 +2,14 @@ name: Deploy and Test Azure Function
 
 on:
   workflow_dispatch:
-  # Temporarily commenting out automatic triggers
-  # push:
-  #   branches: [main]
-  #   paths-ignore:
-  #     - "**.md"
-  # pull_request:
-  #   branches: [main]
-  #   paths-ignore:
-  #     - "**.md"
+  push:
+    branches: [main]
+    paths-ignore:
+      - "**.md"
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - "**.md"
 
 env:
   RESOURCE_GROUP: "durable-func-test-rg-${{ github.run_id }}"
@@ -74,20 +73,13 @@ jobs:
           echo "Waiting for Function App to initialize (30 seconds)..."
           sleep 30
 
-      # Check Function App logs to ensure proper initialization
-      - name: Check Function App logs
-        run: |
-          echo "Checking Function App logs for common errors..."
-          # Use timeout to prevent infinite hanging - log for maximum 60 seconds
-          timeout 60 az webapp log tail --name ${{ env.FUNCTION_APP_NAME }} --resource-group ${{ env.RESOURCE_GROUP }} || echo "Log streaming completed or timed out"
-
       # Health-check loop to verify function deployment
       - name: Function Health Check
         run: |
           echo "Starting health check for function app..."
           timeout=300  # 5 minutes timeout
           interval=10  # Check every 10 seconds
-          endpoint="https://${{ env.FUNCTION_APP_NAME }}.azurewebsites.net/api/orchestrators/HelloOrchestrator"
+          endpoint="https://${{ env.FUNCTION_APP_NAME }}.azurewebsites.net/api/orchestrators/hello_orchestrator"
 
           start_time=$(date +%s)
           end_time=$((start_time + timeout))
@@ -117,70 +109,60 @@ jobs:
 
           echo "Function app deployment verified successfully!"
 
-      # Create a simplified test that just verifies the API endpoint works
-      - name: Create simplified API test
+      # Start the frontend React app locally for testing
+      - name: Set up and start frontend React app
         run: |
-          mkdir -p e2e-tests
-          cat > e2e-tests/durable-function-test.spec.js << 'EOF'
-          const { test, expect } = require('@playwright/test');
+          cd frontend
+          npm install
 
-          test('should verify HTTP endpoint is available', async ({ request }) => {
-            // Get the status URL directly from the API endpoint
-            const response = await request.post(`https://${{ env.FUNCTION_APP_NAME }}.azurewebsites.net/api/orchestrators/HelloOrchestrator`, {
-              timeout: 60000
-            });
-            
-            console.log('Response status:', response.status());
-            
-            // Verify that we get a successful response code (2xx)
-            expect(response.status()).toBeLessThan(300);
-            expect(response.status()).toBeGreaterThanOrEqual(200);
-            
-            const responseBody = await response.json();
-            console.log('Response body:', JSON.stringify(responseBody, null, 2));
-            
-            // Verify that the response contains a statusQueryGetUri
-            expect(responseBody.statusQueryGetUri).toBeTruthy();
-            console.log('StatusQueryGetUri:', responseBody.statusQueryGetUri);
-          });
-          EOF
+          # Create a .env file with the Azure Function URL
+          echo "REACT_APP_FUNCTION_URL=https://${{ env.FUNCTION_APP_NAME }}.azurewebsites.net" > .env
 
-      - name: Configure Playwright test config
+          # Start the React app in the background
+          echo "Starting React app in background..."
+          npm start &
+
+          # Allow time for React app to start
+          echo "Waiting for React app to start up (30 seconds)..."
+          sleep 30
+
+          # Verify that the React app is running
+          echo "Verifying React app is running..."
+          if curl -s http://localhost:3000 | grep -q "React App"; then
+            echo "✅ React app is running successfully"
+          else
+            echo "⚠️ React app might not be fully started yet, but continuing anyway..."
+          fi
+
+      # Update the Playwright test file to use deployed function endpoint but keep local frontend
+      - name: Update Playwright test for deployment
         run: |
-          cat > playwright.config.js << 'EOF'
-          module.exports = {
-            testDir: './e2e-tests',
-            timeout: 90000,
-            use: {
-              headless: true,
-              viewport: { width: 1280, height: 720 },
-              ignoreHTTPSErrors: true,
-              video: 'on-first-retry',
-              screenshot: 'only-on-failure',
-            },
-            reporter: [ ['html'], ['list'] ]
-          };
-          EOF
+          # Create a modified version of the test file that uses the deployed function but local frontend
+          sed "s|http://localhost:7071/api/orchestrators/HelloOrchestrator|https://${{ env.FUNCTION_APP_NAME }}.azurewebsites.net/api/orchestrators/hello_orchestrator|g" \
+              e2e-tests/durable-function-test.spec.js > e2e-tests/durable-function-azure-test.spec.js
+
+          # Print the modified file for debugging
+          echo "Modified test file content:"
+          cat e2e-tests/durable-function-azure-test.spec.js
 
       - name: Install Playwright
         run: |
-          npm init -y
-          npm install -D @playwright/test
+          npm install
           npx playwright install --with-deps chromium
 
       - name: Run Playwright Tests
-        run: npx playwright test
+        run: npx playwright test e2e-tests/durable-function-azure-test.spec.js
 
-      #      - name: Upload Playwright Report
-      #        uses: actions/upload-artifact@v4
-      #        if: always()
-      #        with:
-      #          name: playwright-report
-      #          path: playwright-report/
-      #          retention-days: 30
+      - name: Upload Playwright Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30
 
       # Clean up resources
-#      - name: Clean up Azure Resources
-#        if: always()
-#        run: |
-#          az group delete --name ${{ env.RESOURCE_GROUP }} --yes --no-wait
+      - name: Clean up Azure Resources
+        if: always()
+        run: |
+          az group delete --name ${{ env.RESOURCE_GROUP }} --yes --no-wait

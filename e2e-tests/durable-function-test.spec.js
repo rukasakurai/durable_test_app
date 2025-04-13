@@ -2,7 +2,7 @@ const { test, expect } = require('@playwright/test');
 
 test('should verify local HTTP endpoint is available', async ({ request }) => {
   // Get the status URL directly from the API endpoint
-  const response = await request.post('http://localhost:7071/api/orchestrators/HelloOrchestrator', {
+  const response = await request.post('http://localhost:7071/api/orchestrators/hello_orchestrator', {
     timeout: 60000
   });
   

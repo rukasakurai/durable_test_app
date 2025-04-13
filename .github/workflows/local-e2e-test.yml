@@ -75,7 +75,7 @@ jobs:
 
       - name: Check if Azure Functions are running
         run: |
-          response=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:7071/api/orchestrators/HelloOrchestrator -X POST || echo "Failed to connect")
+          response=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:7071/api/orchestrators/hello_orchestrator -X POST || echo "Failed to connect")
           echo "Function status code: $response"
           if [[ "$response" != "2"* ]]; then
             echo "Azure Functions are not running properly. Checking logs..."
