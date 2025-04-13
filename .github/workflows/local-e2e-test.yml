@@ -67,16 +67,6 @@ jobs:
           }
           EOF
 
-      - name: Install frontend dependencies
-        run: |
-          cd frontend
-          npm ci
-
-      - name: Build frontend
-        run: |
-          cd frontend
-          npm run build || (echo "Build failed. Creating a minimal build directory for testing." && mkdir -p build/static/js)
-
       - name: Start Azure Functions
         run: |
           func start &
@@ -93,6 +83,16 @@ jobs:
             exit 1
           fi
           echo "Azure Functions are running correctly!"
+
+      - name: Install frontend dependencies
+        run: |
+          cd frontend
+          npm ci
+
+      - name: Build frontend
+        run: |
+          cd frontend
+          npm run build || (echo "Build failed. Creating a minimal build directory for testing." && mkdir -p build/static/js)
 
       - name: Start frontend server for UI tests
         run: |
