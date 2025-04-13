@@ -87,17 +87,12 @@ jobs:
       - name: Install frontend dependencies
         run: |
           cd frontend
-          npm ci
-
-      - name: Build frontend
-        run: |
-          cd frontend
-          npm run build || (echo "Build failed. Creating a minimal build directory for testing." && mkdir -p build/static/js)
+          npm install
 
       - name: Start frontend server for UI tests
         run: |
           cd frontend
-          npx serve -s build -l 3000 &
+          npm start &
           echo "Waiting for frontend server to start..."
           sleep 20
 
