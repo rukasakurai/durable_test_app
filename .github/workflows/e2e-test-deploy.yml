@@ -57,6 +57,43 @@ jobs:
             appInsightsName=${{ env.APP_INSIGHTS_NAME }}
           deploymentName: "durable-func-deployment-${{ github.run_id }}"
 
+      # Health-check loop to verify function app infrastructure is ready
+      - name: Check Function App Infrastructure
+        run: |
+          echo "Verifying function app infrastructure is ready..."
+          timeout=300  # 5 minutes timeout
+          interval=10  # Check every 10 seconds
+          endpoint="https://${{ env.FUNCTION_APP_NAME }}.azurewebsites.net"
+
+          start_time=$(date +%s)
+          end_time=$((start_time + timeout))
+
+          while [ $(date +%s) -lt $end_time ]; do
+            echo "Checking function app infrastructure at $(date)..."
+            
+            status_code=$(curl -s -o /dev/null -w "%{http_code}" -X GET "${endpoint}")
+            
+            echo "Received status code: $status_code"
+            
+            # We might get a 200, 403, or 404 when the app is provisioned but not yet deployed
+            # Any of these codes means the infrastructure is ready
+            if [ $status_code -eq 200 ] || [ $status_code -eq 403 ] || [ $status_code -eq 404 ]; then
+              echo "✅ Function app infrastructure is ready with status code: $status_code"
+              break
+            else
+              echo "⏳ Function app infrastructure is not ready yet, status code: $status_code. Waiting $interval seconds..."
+              sleep $interval
+            fi
+          done
+
+          # Check if we exited due to timeout
+          if [ $(date +%s) -ge $end_time ]; then
+            echo "❌ Infrastructure check failed - Function app did not become available within timeout period"
+            exit 1
+          fi
+
+          echo "Function app infrastructure is verified successfully!"
+
       # Deploy Azure Function with the official Azure Functions GitHub Action
       - name: Deploy Azure Functions
         uses: Azure/functions-action@v1
