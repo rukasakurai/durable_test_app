@@ -106,6 +106,7 @@ resource staticWebApp 'Microsoft.Web/staticSites@2024-04-01' = {
   }
   properties: {
     branch: 'main'
+    repositoryUrl: 'https://github.com/rukasakurai/durable_test_app'
     buildProperties: {
       appLocation: 'frontend'
       outputLocation: 'build'
