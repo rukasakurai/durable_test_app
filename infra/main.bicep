@@ -3,6 +3,7 @@ param functionAppName string
 param storageAccountName string
 param appServicePlanName string
 param appInsightsName string
+param staticWebAppName string
 
 var functionWorkerRuntime = 'python'
 var functionAppVersion = '~4'
@@ -92,5 +93,19 @@ resource functionApp 'Microsoft.Web/sites@2022-03-01' = {
   }
 }
 
+resource staticWebApp 'Microsoft.Web/staticSites@2022-03-01' = {
+  name: staticWebAppName
+  location: location
+  properties: {
+    branch: 'main'
+    buildProperties: {
+      appLocation: 'frontend'
+      outputLocation: 'build'
+      apiLocation: 'http_start' // Points to the directory containing the main Azure Function app
+    }
+  }
+}
+
 output functionAppName string = functionApp.name
 output functionAppUrl string = 'https://${functionApp.properties.defaultHostName}'
+output staticWebAppUrl string = 'https://${staticWebApp.properties.defaultHostname}'
