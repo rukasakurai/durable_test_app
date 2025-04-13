@@ -25,14 +25,14 @@ test('should complete the full user journey - start orchestration, check status,
   await page.goto('http://localhost:3000');
   console.log('Navigated to frontend app');
   
-  // Click the "Start Orchestration" button
-  await page.click('button:has-text("Start Orchestration")');
+  // Click the "Start Orchestration" button using data-testid
+  await page.getByTestId('start-button').click();
   console.log('Clicked Start Orchestration button');
   
-  // Wait for the status URL to appear
+  // Wait for the status URL to appear using data-testid
   console.log('Waiting for status URL to appear...');
   try {
-    const statusUrlElement = await page.waitForSelector('p:has-text("Status URL:") code', { timeout: 30000 });
+    const statusUrlElement = await page.getByTestId('status-url').waitFor({ timeout: 30000 });
     const statusUrl = await statusUrlElement.textContent();
     console.log('Status URL found:', statusUrl);
   } catch (error) {
@@ -52,13 +52,13 @@ test('should complete the full user journey - start orchestration, check status,
   // This is necessary because Durable Functions take some time to complete
   await page.waitForTimeout(3000);
   
-  // Click the "Check Status" button
-  await page.click('button:has-text("Check Status")');
+  // Click the "Check Status" button using data-testid
+  await page.getByTestId('check-status-button').click();
   console.log('Clicked Check Status button');
   
-  // Wait for the status text to appear
-  const statusText = await page.waitForSelector('p:has-text("Status:")', { timeout: 30000 });
-  const status = await statusText.textContent();
+  // Wait for the status text to appear using data-testid
+  const statusElement = await page.getByTestId('status-display').waitFor({ timeout: 30000 });
+  const status = await statusElement.textContent();
   console.log('Status found:', status);
   
   // Verify that the status shows "Completed"

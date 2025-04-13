@@ -30,16 +30,24 @@ function App() {
   return (
     <div className="p-4">
       <h1 className="text-xl font-bold">Durable Function Tester</h1>
-      <button onClick={startOrchestration} className="bg-blue-500 text-white px-4 py-2 rounded mt-2">
+      <button 
+        data-testid="start-button" 
+        onClick={startOrchestration} 
+        className="bg-blue-500 text-white px-4 py-2 rounded mt-2"
+      >
         Start Orchestration
       </button>
       {statusUrl && (
-        <div className="mt-4">
-          <p>Status URL: <code>{statusUrl}</code></p>
-          <button onClick={checkStatus} className="bg-green-500 text-white px-4 py-2 rounded mt-2">
+        <div className="mt-4" data-testid="status-section">
+          <p>Status URL: <code data-testid="status-url">{statusUrl}</code></p>
+          <button 
+            data-testid="check-status-button"
+            onClick={checkStatus} 
+            className="bg-green-500 text-white px-4 py-2 rounded mt-2"
+          >
             Check Status
           </button>
-          {status && <p className="mt-2">Status: {status}</p>}
+          {status && <p className="mt-2" data-testid="status-display">Status: {status}</p>}
         </div>
       )}
     </div>
