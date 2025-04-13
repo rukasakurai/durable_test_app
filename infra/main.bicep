@@ -1,4 +1,7 @@
 param location string = resourceGroup().location
+// As of April 13, 2025, Azure Static Web Apps are not available in Japan East
+// Using East Asia as it's the closest available region to Japan East for Static Web Apps
+param staticWebAppLocation string = 'eastasia'
 param functionAppName string
 param storageAccountName string
 param appServicePlanName string
@@ -9,7 +12,7 @@ var functionWorkerRuntime = 'python'
 var functionAppVersion = '~4'
 var linuxFxVersion = 'Python|3.11'
 
-resource storageAccount 'Microsoft.Storage/storageAccounts@2022-09-01' = {
+resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' = {
   name: storageAccountName
   location: location
   sku: {
@@ -22,7 +25,7 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2022-09-01' = {
   }
 }
 
-resource appServicePlan 'Microsoft.Web/serverfarms@2022-03-01' = {
+resource appServicePlan 'Microsoft.Web/serverfarms@2024-04-01' = {
   name: appServicePlanName
   location: location
   sku: {
@@ -44,7 +47,7 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
   }
 }
 
-resource functionApp 'Microsoft.Web/sites@2022-03-01' = {
+resource functionApp 'Microsoft.Web/sites@2024-04-01' = {
   name: functionAppName
   location: location
   kind: 'functionapp,linux'
@@ -93,9 +96,10 @@ resource functionApp 'Microsoft.Web/sites@2022-03-01' = {
   }
 }
 
-resource staticWebApp 'Microsoft.Web/staticSites@2022-03-01' = {
+resource staticWebApp 'Microsoft.Web/staticSites@2024-04-01' = {
   name: staticWebAppName
-  location: location
+  // Using different location for Static Web App due to service availability constraints
+  location: staticWebAppLocation
   properties: {
     branch: 'main'
     buildProperties: {
