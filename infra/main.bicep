@@ -100,6 +100,10 @@ resource staticWebApp 'Microsoft.Web/staticSites@2024-04-01' = {
   name: staticWebAppName
   // Using different location for Static Web App due to service availability constraints
   location: staticWebAppLocation
+  sku: {
+    name: 'Free' // Valid options: 'Free', 'Standard', or 'Dedicated'
+    tier: 'Free'
+  }
   properties: {
     branch: 'main'
     buildProperties: {
