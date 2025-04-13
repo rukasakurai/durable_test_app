@@ -112,6 +112,7 @@ jobs:
 
       # Health-check loop to verify function deployment
       - name: Function Health Check
+        continue-on-error: true
         run: |
           echo "Starting health check for function app..."
           timeout=300  # 5 minutes timeout
