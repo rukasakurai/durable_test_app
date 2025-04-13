@@ -92,6 +92,7 @@ resource functionApp 'Microsoft.Web/sites@2024-04-01' = {
           'https://portal.azure.com'
           '*' // Add this for testing, but remove for production
         ]
+        supportCredentials: false // Set to true if your frontend needs to send credentials in requests
       }
     }
     httpsOnly: true
