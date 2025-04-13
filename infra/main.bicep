@@ -89,6 +89,8 @@ resource functionApp 'Microsoft.Web/sites@2024-04-01' = {
         allowedOrigins: [
           'http://localhost:3000'
           'https://localhost:3000'
+          'https://portal.azure.com'
+          '*' // Add this for testing, but remove for production
         ]
       }
     }
