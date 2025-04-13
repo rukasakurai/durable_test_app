@@ -104,9 +104,11 @@ Before running this application locally, make sure you have the following instal
    npm install
    ```
 
-## Running the Application Locally
+## Running the application
 
-### Starting Azurite to serve as the emulator for Azure Storage
+### Option 1: Running the application Locally
+
+#### Starting Azurite to serve as the emulator for Azure Storage
 
 To install Azurite, you can use npm:
 
@@ -120,7 +122,7 @@ To start Azurite, run:
 azurite
 ```
 
-### Starting the Azure Functions Backend
+#### Starting the Azure Functions Backend
 
 1. Ensure your virtual environment is activated:
 
@@ -145,7 +147,7 @@ azurite
 
 3. Note the URL where your HTTP trigger function is running.
 
-### Starting the React Frontend
+#### Starting the React Frontend
 
 1. In a separate terminal, navigate to the frontend directory:
 
@@ -161,9 +163,9 @@ azurite
 
 3. Your default browser should automatically open to http://localhost:3000, showing the frontend application.
 
-## Deploying to Azure
+### Option 2: Deploying to Azure
 
-### Deploying the Azure Functions Backend
+#### Deploying the Azure Functions Backend
 
 1. Create Azure resources using the Bicep template in the repository:
 
@@ -228,9 +230,15 @@ azurite
    echo "Function App URL: https://$FUNCTION_APP_URL"
    ```
 
-### Deploying the Frontend (React)
+#### Deploying the Frontend (React)
 
-1. Build the production version of the React application:
+1. Create a `.env` file in the `frontend` directory to store environment variables.
+2. Add the following line to the `.env` file, replacing `<function-app-name>` with the name of your Azure Function App:
+   ```env
+   REACT_APP_FUNCTION_URL=https://<function-app-name>.azurewebsites.net
+   ```
+3. Ensure this file is included in your deployment process if deploying the frontend to Azure Static Web Apps or another hosting service.
+4. Build the production version of the React application:
 
    ```powershell
    # Navigate to frontend directory
@@ -240,9 +248,7 @@ azurite
    npm run build
    ```
 
-2. Deploy the built frontend using one of these methods:
-
-   #### Option 1: Azure Static Web Apps
+5. Deploy the built frontend using one of these methods:
 
    ```powershell
    # Define variables
@@ -259,42 +265,7 @@ azurite
      --output-location "build"
    ```
 
-   #### Option 2: Azure Storage Static Website
-
-   ```powershell
-   # Define variables
-   $STORAGE_WEB_NAME="stwebdurable$((Get-Random -Maximum 999).ToString('000'))"
-
-   # Create storage account
-   az storage account create \
-     --name $STORAGE_WEB_NAME \
-     --resource-group $RESOURCE_GROUP \
-     --location $LOCATION \
-     --sku Standard_LRS \
-     --kind StorageV2
-
-   # Enable static website feature
-   az storage blob service-properties update \
-     --account-name $STORAGE_WEB_NAME \
-     --static-website \
-     --index-document index.html
-
-   # Upload the built files
-   az storage blob upload-batch \
-     --account-name $STORAGE_WEB_NAME \
-     --source frontend/build \
-     --destination '$web'
-
-   # Get the static website URL
-   $STATIC_WEBSITE_URL=$(az storage account show \
-     --name $STORAGE_WEB_NAME \
-     --resource-group $RESOURCE_GROUP \
-     --query "primaryEndpoints.web" \
-     --output tsv)
-   echo "Static Website URL: $STATIC_WEBSITE_URL"
-   ```
-
-3. Update CORS settings in your Function App to allow the frontend domain:
+6. Update CORS settings in your Function App to allow the frontend domain:
 
    ```powershell
    # Add CORS origin for the static website
@@ -304,9 +275,55 @@ azurite
      --allowed-origins $STATIC_WEBSITE_URL
    ```
 
-4. Update your frontend API configuration to use the Azure Function App URL:
+7. Update your frontend API configuration to use the Azure Function App URL:
    - In your React app, update API endpoints to point to your Function App URL
    - Example: `https://$FUNCTION_APP_URL/api/HttpStart`
+
+## Testing the Application
+
+Once both the backend and frontend are running:
+
+1. Use the frontend interface to interact with the Durable Functions app
+2. Alternatively, you can test the backend directly by sending HTTP requests to the HttpStart endpoint:
+   ```
+   http://localhost:7071/api/HttpStart  # For local testing
+   https://my-durable-function-app.azurewebsites.net/api/HttpStart  # For Azure deployment
+   ```
+
+### Running End-to-End Tests Locally with Playwright
+
+To manually run the E2E tests using Playwright on your Windows PC:
+
+1. Make sure both the Azure Functions backend and the React frontend are running:
+
+   - Backend should be running on http://localhost:7071
+   - Frontend should be running on http://localhost:3000
+
+2. Open a PowerShell 7 terminal in the project root directory
+
+3. Install Playwright and its dependencies (if not already installed):
+
+   ```powershell
+   npm install -D @playwright/test
+   npx playwright install --with-deps chromium
+   ```
+
+4. Run the Playwright tests:
+
+   ```powershell
+   npx playwright test
+   ```
+
+5. To run tests with a visible browser (non-headless mode), use:
+
+   ```powershell
+   npx playwright test --headed
+   ```
+
+6. To open the HTML report after test execution:
+   ```powershell
+   npx playwright show-report
+   ```
 
 ## GitHub Actions Workflow Setup
 
@@ -381,68 +398,6 @@ After getting your credentials JSON (from either Option 1 or Option 2):
 ### Running the workflow
 
 The workflow will automatically run on pushes to the `main` branch. You can also manually trigger it from the "Actions" tab in your GitHub repository.
-
-## Testing the Application
-
-Once both the backend and frontend are running:
-
-1. Use the frontend interface to interact with the Durable Functions app
-2. Alternatively, you can test the backend directly by sending HTTP requests to the HttpStart endpoint:
-   ```
-   http://localhost:7071/api/HttpStart  # For local testing
-   https://my-durable-function-app.azurewebsites.net/api/HttpStart  # For Azure deployment
-   ```
-
-### Running End-to-End Tests Locally with Playwright
-
-To manually run the E2E tests using Playwright on your Windows PC:
-
-1. Make sure both the Azure Functions backend and the React frontend are running:
-
-   - Backend should be running on http://localhost:7071
-   - Frontend should be running on http://localhost:3000
-
-2. Open a PowerShell 7 terminal in the project root directory
-
-3. Install Playwright and its dependencies (if not already installed):
-
-   ```powershell
-   npm install -D @playwright/test
-   npx playwright install --with-deps chromium
-   ```
-
-4. Run the Playwright tests:
-
-   ```powershell
-   npx playwright test
-   ```
-
-5. To run tests with a visible browser (non-headless mode), use:
-
-   ```powershell
-   npx playwright test --headed
-   ```
-
-6. To open the HTML report after test execution:
-   ```powershell
-   npx playwright show-report
-   ```
-
-## Troubleshooting
-
-- **Port conflicts**: If another application is using port 7071 or 3000, you may need to configure different ports
-- **CORS issues**: If you encounter CORS errors, check the Azure Functions local.settings.json file to ensure it has proper CORS settings
-- **Python/Node version incompatibilities**: Ensure you're using compatible versions of Python and Node as listed in prerequisites
-- **Azure deployment issues**: Check Azure Function logs in the portal or via `func azure functionapp logstream my-durable-function-app`
-
-## Application Structure
-
-- `host.json`: Configuration for the Azure Functions host
-- `requirements.txt`: Python dependencies
-- `frontend/`: Contains the React frontend application
-- `HelloOrchestrator/`: The durable orchestrator function
-- `HttpStart/`: HTTP trigger function to start the orchestration
-- `SayHello/`: Activity function called by the orchestrator
 
 # Recommended Reading
 

@@ -6,7 +6,7 @@ function App() {
 
   const startOrchestration = async () => {
     try {
-      const response = await fetch("/api/orchestrators/hello_orchestrator", { method: "POST" });
+      const response = await fetch(`${process.env.REACT_APP_FUNCTION_URL}/api/orchestrators/hello_orchestrator`, { method: "POST" });
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
