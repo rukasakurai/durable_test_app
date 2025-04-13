@@ -142,3 +142,11 @@ frontend/build/
 
 # Ignore Node.js dependencies
 frontend/node_modules/
+
+# Playwright specific artifacts
+playwright-report/
+test-results/
+error-screenshot.png
+**/screenshots/
+**/videos/
+**/traces/
