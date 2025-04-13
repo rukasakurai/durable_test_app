@@ -141,6 +141,7 @@ AzuriteConfig
 frontend/build/
 
 # Ignore Node.js dependencies
+node_modules/
 frontend/node_modules/
 
 # Playwright specific artifacts
