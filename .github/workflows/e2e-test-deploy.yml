@@ -1,15 +1,15 @@
-name: Deploy and Test Azure Function
+name: E2E Test with application deployed to Azure
 
 on:
   workflow_dispatch:
-#  push:
-#    branches: [main]
-#    paths-ignore:
-#      - "**.md"
-#  pull_request:
-#    branches: [main]
-#    paths-ignore:
-#      - "**.md"
+  push:
+    branches: [main]
+    paths-ignore:
+      - "**.md"
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - "**.md"
 
 env:
   RESOURCE_GROUP: "durable-func-test-rg-${{ github.run_id }}"
@@ -18,6 +18,7 @@ env:
   STORAGE_ACCOUNT_NAME: "dfsa${{ github.run_id }}"
   APP_SERVICE_PLAN_NAME: "df-test-plan-${{ github.run_id }}"
   APP_INSIGHTS_NAME: "df-test-ai-${{ github.run_id }}"
+  STATIC_WEB_APP_NAME: "df-swa-${{ github.run_id }}"
 
 jobs:
   deploy-and-test:
@@ -55,6 +56,7 @@ jobs:
             storageAccountName=${{ env.STORAGE_ACCOUNT_NAME }}
             appServicePlanName=${{ env.APP_SERVICE_PLAN_NAME }}
             appInsightsName=${{ env.APP_INSIGHTS_NAME }}
+            staticWebAppName=${{ env.STATIC_WEB_APP_NAME }}
           deploymentName: "durable-func-deployment-${{ github.run_id }}"
 
       # Health-check loop to verify function app infrastructure is ready
@@ -94,15 +96,15 @@ jobs:
 
           echo "Function app infrastructure is verified successfully!"
 
-      # Deploy Azure Function with the official Azure Functions GitHub Action
-      - name: Deploy Azure Functions
-        uses: Azure/functions-action@v1
-        with:
-          app-name: ${{ env.FUNCTION_APP_NAME }}
-          # Removed publish-profile as it doesn't apply to dynamically created Function Apps
-          scm-do-build-during-deployment: true
-          # Just deploy the code from this directory
-          package: ./
+      # Deploy Azure Functions using CLI
+      - name: Install Azure Functions Core Tools
+        run: |
+          npm install -g azure-functions-core-tools@4
+
+      - name: Deploy Azure Functions using CLI
+        run: |
+          echo "Publishing function app using Azure Functions Core Tools..."
+          func azure functionapp publish ${{ env.FUNCTION_APP_NAME }} --python --build-native-deps
 
       # Wait for function app to initialize properly
       - name: Wait for Function App to initialize

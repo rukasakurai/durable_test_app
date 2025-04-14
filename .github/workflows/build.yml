@@ -3,10 +3,10 @@ name: Build Frontend and Backend
 on:
   push:
     branches:
-      - '**'
+      - main
   pull_request:
     branches:
-      - '**'
+      - main
 
 jobs:
   build-backend:

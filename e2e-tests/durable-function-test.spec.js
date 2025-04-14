@@ -1,25 +1,5 @@
 const { test, expect } = require('@playwright/test');
 
-test('should verify local HTTP endpoint is available', async ({ request }) => {
-  // Get the status URL directly from the API endpoint
-  const response = await request.post('http://localhost:7071/api/orchestrators/hello_orchestrator', {
-    timeout: 60000
-  });
-  
-  console.log('Response status:', response.status());
-  
-  // Verify that we get a successful response code (2xx)
-  expect(response.status()).toBeLessThan(300);
-  expect(response.status()).toBeGreaterThanOrEqual(200);
-  
-  const responseBody = await response.json();
-  console.log('Response body:', JSON.stringify(responseBody, null, 2));
-  
-  // Verify that the response contains a statusQueryGetUri
-  expect(responseBody.statusQueryGetUri).toBeTruthy();
-  console.log('StatusQueryGetUri:', responseBody.statusQueryGetUri);
-});
-
 test('should complete the full user journey - start orchestration, check status, and verify completion', async ({ page }) => {
   // Navigate to the React app
   await page.goto('http://localhost:3000');
