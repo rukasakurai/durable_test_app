@@ -236,52 +236,58 @@ azurite
 
 #### Deploying the Frontend (React)
 
-1. Create a `.env` file in the `frontend` directory to store environment variables.
-2. Add the following line to the `.env` file, replacing `<function-app-name>` with the name of your Azure Function App:
-   ```env
-   REACT_APP_FUNCTION_URL=https://<function-app-name>.azurewebsites.net
-   ```
-3. Ensure this file is included in your deployment process if deploying the frontend to Azure Static Web Apps or another hosting service.
-4. Build the production version of the React application:
+1. **Configure Environment Variables**:
 
-   ```powershell
-   # Navigate to frontend directory
-   cd frontend
+   - Create a `.env` file in the `frontend` directory to store environment variables
+   - Add the following line to the `.env` file, replacing `<function-app-name>` with the name of your Azure Function App:
+     ```env
+     REACT_APP_FUNCTION_URL=https://<function-app-name>.azurewebsites.net
+     ```
 
-   # Build the React app
-   npm run build
-   ```
+2. **Build the Production Version**:
 
-5. Deploy the built frontend using one of these methods:
+   - Navigate to the frontend directory and build the React application:
 
-   ```powershell
-   # Define variables
-   $STATIC_WEB_APP_NAME="stapp-durable-frontend"
+     ```powershell
+     # Navigate to frontend directory
+     cd frontend
 
-   # Create and deploy Static Web App
-   az staticwebapp create \
-     --name $STATIC_WEB_APP_NAME \
-     --resource-group $RESOURCE_GROUP \
-     --source https://github.com/yourusername/durable_test_app \
-     --location "eastus2" \
-     --branch main \
-     --app-location "/frontend" \
-     --output-location "build"
-   ```
+     # Build the React app
+     npm run build
+     ```
 
-6. Update CORS settings in your Function App to allow the frontend domain:
+3. **Install the Azure Static Web Apps CLI**:
 
-   ```powershell
-   # Add CORS origin for the static website
-   az functionapp cors add \
-     --name $FUNCTION_APP_NAME \
-     --resource-group $RESOURCE_GROUP \
-     --allowed-origins $STATIC_WEBSITE_URL
-   ```
+   - The Static Web Apps CLI helps deploy your application to Azure:
+     ```bash
+     npm install -g @azure/static-web-apps-cli
+     ```
 
-7. Update your frontend API configuration to use the Azure Function App URL:
-   - In your React app, update API endpoints to point to your Function App URL
-   - Example: `https://$FUNCTION_APP_URL/api/HttpStart`
+4. **Authenticate with Azure**:
+
+   - Login to Azure through the Static Web Apps CLI:
+     ```bash
+     swa login
+     ```
+
+5. **Prepare Deployment Target**:
+
+   - Disconnect any existing GitHub workflows from the Static Web App:
+     ```bash
+     az staticwebapp disconnect \
+       --name $STATIC_WEB_APP_NAME \
+       --resource-group $RESOURCE_GROUP
+     ```
+
+6. **Deploy the Application**:
+
+   - Deploy your built React application to Azure Static Web Apps:
+     ```bash
+     swa deploy \
+       --app-name $STATIC_WEB_APP_NAME \
+       --resource-group $RESOURCE_GROUP \
+       --output-location build
+     ```
 
 ## Testing the Application
 
