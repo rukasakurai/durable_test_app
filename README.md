@@ -234,27 +234,27 @@ azurite
 
    The command above should return `202`, indicating that the durable function orchestration has been accepted and is being processed asynchronously.
 
-#### Deploying the Frontend (React)
+#### Deploying the Frontend to Azure Static Web App (WIP)
 
 1. **Configure Environment Variables**:
+
+   ```powershell
+   # Navigate to frontend directory
+   cd frontend
+   ```
 
    - Create a `.env` file in the `frontend` directory to store environment variables
    - Add the following line to the `.env` file, replacing `<function-app-name>` with the name of your Azure Function App:
      ```env
-     REACT_APP_FUNCTION_URL=https://<function-app-name>.azurewebsites.net
+     REACT_APP_FUNCTION_URL=https://${FUNCTION_APP_NAME}.azurewebsites.net
      ```
 
 2. **Build the Production Version**:
 
-   - Navigate to the frontend directory and build the React application:
-
-     ```powershell
-     # Navigate to frontend directory
-     cd frontend
-
-     # Build the React app
-     npm run build
-     ```
+   ```bash
+   # Build the React app
+   npm run build
+   ```
 
 3. **Install the Azure Static Web Apps CLI**:
 
@@ -288,6 +288,8 @@ azurite
        --resource-group $RESOURCE_GROUP \
        --output-location build
      ```
+
+   > **Note**: After deployment, you may encounter CORS errors when the Static Web App tries to communicate with the Function App. This appears as a 404 error followed by "Access blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource." To fix this issue, you need to configure CORS settings in your Azure Function App to allow requests from your Static Web App domain.
 
 ## Testing the Application
 
