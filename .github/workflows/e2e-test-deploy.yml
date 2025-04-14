@@ -96,15 +96,15 @@ jobs:
 
           echo "Function app infrastructure is verified successfully!"
 
-      # Deploy Azure Functions with the official Azure Functions GitHub Action
-      - name: Deploy Azure Functions
-        uses: Azure/functions-action@v1
-        with:
-          app-name: ${{ env.FUNCTION_APP_NAME }}
-          scm-do-build-during-deployment: true
-          package: ./
-          language: python
-          python-version: '3.11'
+      # Deploy Azure Functions using CLI
+      - name: Install Azure Functions Core Tools
+        run: |
+          npm install -g azure-functions-core-tools@4
+
+      - name: Deploy Azure Functions using CLI
+        run: |
+          echo "Publishing function app using Azure Functions Core Tools..."
+          func azure functionapp publish ${{ env.FUNCTION_APP_NAME }} --python --build-native-deps
 
       # Wait for function app to initialize properly
       - name: Wait for Function App to initialize
