@@ -1,4 +1,4 @@
-name: Deploy and Test Azure Function
+name: E2E Test with application deployed to Azure
 
 on:
   workflow_dispatch:
