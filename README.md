@@ -169,14 +169,14 @@ azurite
 
 1. Create Azure resources using the Bicep template in the repository:
 
-   ```powershell
+   ```bash
    # Define variables
-   $RESOURCE_GROUP="rg-durable-functions-test"
-   $LOCATION="japaneast"
-   $FUNCTION_APP_NAME="func-durable-app"
-   $APP_SERVICE_PLAN="plan-durable-app"
-   $APP_INSIGHTS_NAME="appi-durable-app"
-   $STATIC_WEB_APP_NAME="stapp-durable-app"
+   RESOURCE_GROUP="rg-durable-functions-test"
+   LOCATION="japaneast"
+   FUNCTION_APP_NAME="func-durable-app"
+   APP_SERVICE_PLAN="plan-durable-app"
+   APP_INSIGHTS_NAME="appi-durable-app"
+   STATIC_WEB_APP_NAME="stapp-durable-app"
    ```
 
    To generate a random storage account name:
@@ -192,7 +192,7 @@ azurite
      STORAGE_ACCOUNT_NAME=$(printf "stdurableapp%03d" $((RANDOM % 1000)))
      ```
 
-   ```powershell
+   ```bash
    # Log in to Azure if not already logged in
    az login
 
@@ -219,18 +219,20 @@ azurite
 
 2. Deploy the Function App using Azure Functions Core Tools:
 
-   ```powershell
+   ```bash
    # Deploy the function app
    func azure functionapp publish $FUNCTION_APP_NAME --python
    ```
 
-3. After deployment, you can view the Function App URL in the outputs of the Bicep deployment or in the Azure portal:
+3. Verify that your durable function is working properly by checking for a 202 (Accepted) response:
 
-   ```powershell
-   # Get the function app URL
-   $FUNCTION_APP_URL=$(az functionapp show --name $FUNCTION_APP_NAME --resource-group $RESOURCE_GROUP --query "defaultHostName" -o tsv)
-   echo "Function App URL: https://$FUNCTION_APP_URL"
+   ```bash
+   # Check that the orchestrator returns a 202 Accepted response
+   endpoint="https://${FUNCTION_APP_NAME}.azurewebsites.net/api/orchestrators/hello_orchestrator"
+   curl -s -o /dev/null -w "%{http_code}" -X POST "${endpoint}"
    ```
+
+   The command above should return `202`, indicating that the durable function orchestration has been accepted and is being processed asynchronously.
 
 #### Deploying the Frontend (React)
 
