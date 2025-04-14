@@ -91,9 +91,8 @@ resource functionApp 'Microsoft.Web/sites@2024-04-01' = {
           'https://localhost:3000'
           'https://portal.azure.com'
           'https://${staticWebApp.properties.defaultHostname}' // Add the specific Static Web App URL
-          '*' // Add this for testing, but remove for production
         ]
-        supportCredentials: true // Changed to true to support credentials in requests
+        supportCredentials: true // Keeping credentials support for authenticated requests
       }
     }
     httpsOnly: true
