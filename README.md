@@ -176,6 +176,7 @@ azurite
    $FUNCTION_APP_NAME="func-durable-app"
    $APP_SERVICE_PLAN="plan-durable-app"
    $APP_INSIGHTS_NAME="appi-durable-app"
+   $STATIC_WEB_APP_NAME="stapp-durable-app"
    ```
 
    To generate a random storage account name:
@@ -205,7 +206,8 @@ azurite
      --parameters functionAppName=$FUNCTION_APP_NAME \
                   storageAccountName=$STORAGE_ACCOUNT_NAME \
                   appServicePlanName=$APP_SERVICE_PLAN \
-                  appInsightsName=$APP_INSIGHTS_NAME
+                  appInsightsName=$APP_INSIGHTS_NAME \
+                  staticWebAppName=$STATIC_WEB_APP_NAME
    ```
 
    This will create all necessary resources:
@@ -219,7 +221,7 @@ azurite
 
    ```powershell
    # Deploy the function app
-   func azure functionapp publish $FUNCTION_APP_NAME
+   func azure functionapp publish $FUNCTION_APP_NAME --python
    ```
 
 3. After deployment, you can view the Function App URL in the outputs of the Bicep deployment or in the Azure portal:
