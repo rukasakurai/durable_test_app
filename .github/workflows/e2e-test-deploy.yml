@@ -261,7 +261,8 @@ jobs:
       - name: Create Azure Load Testing resource
         run: |
           LOAD_TEST_RESOURCE_NAME="df-loadtest-${{ github.run_id }}"
-          az load test-resource create \
+          az extension add --name load
+          az load test create \
             --name $LOAD_TEST_RESOURCE_NAME \
             --resource-group ${{ env.RESOURCE_GROUP }} \
             --location ${{ env.LOCATION }}
