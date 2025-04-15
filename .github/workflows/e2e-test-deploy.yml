@@ -205,7 +205,7 @@ jobs:
 
           # Create Azure Load Testing resource
           echo "Creating Azure Load Testing resource..."
-          az load create --name $LOAD_TEST_RESOURCE_NAME --resource-group ${{ env.RESOURCE_GROUP }} --location ${{ env.LOCATION }}
+          az load test create --name $LOAD_TEST_RESOURCE_NAME --resource-group ${{ env.RESOURCE_GROUP }} --location ${{ env.LOCATION }}
 
           # Wait for resource creation to complete
           echo "Waiting for Azure Load Testing resource to be ready..."
@@ -249,7 +249,7 @@ jobs:
 
           # Create and run a test
           echo "Running load test using Azure Load Testing..."
-          TEST_ID=$(az load test create \
+          TEST_ID=$(az load test-run create \
             --load-test-resource $LOAD_TEST_RESOURCE_NAME \
             --resource-group ${{ env.RESOURCE_GROUP }} \
             --test-id "test-${{ github.run_id }}" \
@@ -262,18 +262,20 @@ jobs:
           echo "Test ID: $TEST_ID"
 
           # Start the test
-          az load test start \
+          az load test-run start \
             --load-test-resource $LOAD_TEST_RESOURCE_NAME \
             --resource-group ${{ env.RESOURCE_GROUP }} \
-            --test-id $TEST_ID
+            --test-id $TEST_ID \
+            --test-run-id $TEST_ID
 
           # Monitor test progress
           STATUS="notStarted"
           while [[ "$STATUS" != "DONE" ]]; do
-            STATUS=$(az load test show \
+            STATUS=$(az load test-run show \
               --load-test-resource $LOAD_TEST_RESOURCE_NAME \
               --resource-group ${{ env.RESOURCE_GROUP }} \
               --test-id $TEST_ID \
+              --test-run-id $TEST_ID \
               --query 'testRunStatus' -o tsv)
               
             echo "Test run status: $STATUS"
