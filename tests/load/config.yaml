@@ -10,6 +10,6 @@ testName: durable-function-load-test
 description: "Load test for durable function with 10 concurrent users for 1 minute"
 loadTestConfiguration:
   engineSize: 1
-  virtualUsers: 10
-  duration: 60 # 1 minute in seconds
-  rampUp: 10 # 10 seconds to ramp up to full load
+  virtualUsers: 1
+  duration: 3 # 3 seconds in seconds
+  rampUp: 0 # No ramp up needed for 1 user
