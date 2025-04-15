@@ -6,7 +6,7 @@ from locust import HttpUser, task, between, events
 
 
 class DurableFunctionUser(HttpUser):
-    wait_time = between(1, 3)  # Wait between 1 and 3 seconds between tasks
+    wait_time = between(0.5, 1)  # Wait between 0.5 and 1 second between tasks
 
     def on_start(self):
         # Initialize the orchestrator endpoint path

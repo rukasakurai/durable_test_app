@@ -219,9 +219,9 @@ jobs:
           # Run locust in headless mode
           locust --host https://${{ env.FUNCTION_APP_NAME }}.azurewebsites.net \
                  --headless \
-                 --users 10 \
-                 --spawn-rate 2 \
-                 --run-time 1m \
+                 --users 2 \
+                 --spawn-rate 1 \
+                 --run-time 10s \
                  --csv=locust_results \
                  -f locustfile.py
 
@@ -253,7 +253,7 @@ jobs:
             --load-test-resource $LOAD_TEST_RESOURCE_NAME \
             --resource-group ${{ env.RESOURCE_GROUP }} \
             --test-id "test-${{ github.run_id }}" \
-            --test-configuration-file config-deploy.yaml \
+            --load-test-config-file config-deploy.yaml \
             --test-plan locustfile.py \
             --display-name "Durable Function Load Test - ${{ github.run_id }}" \
             --description "Load test for Durable Functions with 10 concurrent users" \
