@@ -262,7 +262,7 @@ jobs:
         run: |
           LOAD_TEST_RESOURCE_NAME="df-loadtest-${{ github.run_id }}"
           az extension add --name load
-          az load test create \
+          az load create \
             --name $LOAD_TEST_RESOURCE_NAME \
             --resource-group ${{ env.RESOURCE_GROUP }} \
             --location ${{ env.LOCATION }}
