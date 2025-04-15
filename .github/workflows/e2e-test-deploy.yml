@@ -239,9 +239,13 @@ jobs:
           az extension add -n application-insights
           az extension add -n resource-graph
 
+          # Install Azure Load Testing extension
+          echo "Installing Azure Load Testing CLI extension..."
+          az extension add -n load-testing
+
           # Create Azure Load Testing resource
           echo "Creating Azure Load Testing resource..."
-          az load test resource create --name $LOAD_TEST_RESOURCE_NAME --resource-group ${{ env.RESOURCE_GROUP }} --location ${{ env.LOCATION }}
+          az load-testing resource create --name $LOAD_TEST_RESOURCE_NAME --resource-group ${{ env.RESOURCE_GROUP }} --location ${{ env.LOCATION }}
 
           # Wait for resource creation to complete
           echo "Waiting for Azure Load Testing resource to be ready..."
