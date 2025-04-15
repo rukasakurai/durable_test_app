@@ -1,5 +1,12 @@
 {
-  "devDependencies": {
-    "@playwright/test": "^1.51.1"
+  "name": "durable-test-app",
+  "version": "1.0.0",
+  "description": "Testing Azure Durable Functions with Playwright",
+  "scripts": {
+    "test": "playwright test --config tests/e2e/playwright.config.ts",
+    "test:ui": "playwright test --config tests/e2e/playwright.config.ts --ui"
+  },
+  "dependencies": {
+    "@playwright/test": "^1.40.0"
   }
 }
