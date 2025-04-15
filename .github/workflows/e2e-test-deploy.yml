@@ -92,7 +92,7 @@ jobs:
           echo "Function app infrastructure is verified successfully!"
 
   function-deployment:
-    name: Deploy Azure Functions
+    name: Deploy to Azure Functions
     needs: infrastructure
     runs-on: ubuntu-latest
     steps:
@@ -241,7 +241,7 @@ jobs:
 
           # Create Azure Load Testing resource
           echo "Creating Azure Load Testing resource..."
-          az load test create --name $LOAD_TEST_RESOURCE_NAME --resource-group ${{ env.RESOURCE_GROUP }} --location ${{ env.LOCATION }}
+          az load test resource create --name $LOAD_TEST_RESOURCE_NAME --resource-group ${{ env.RESOURCE_GROUP }} --location ${{ env.LOCATION }}
 
           # Wait for resource creation to complete
           echo "Waiting for Azure Load Testing resource to be ready..."
