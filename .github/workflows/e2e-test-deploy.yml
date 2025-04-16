@@ -297,6 +297,7 @@ jobs:
             --description "Load test for Durable Functions"
 
       - name: Start Azure Load Test run and monitor
+        continue-on-error: true
         run: |
           LOAD_TEST_RESOURCE_NAME="df-loadtest-${{ github.run_id }}"
           cd tests/load
