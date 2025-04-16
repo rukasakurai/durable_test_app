@@ -297,7 +297,7 @@ jobs:
             --description "Load test for Durable Functions"
 
       - name: Start Azure Load Test run and monitor
-        continue-on-error: true
+        continue-on-error: true # As of 2025-04-16 this step fails, potentially because `Command group 'load test-run' is in preview and under development`
         run: |
           LOAD_TEST_RESOURCE_NAME="df-loadtest-${{ github.run_id }}"
           cd tests/load
