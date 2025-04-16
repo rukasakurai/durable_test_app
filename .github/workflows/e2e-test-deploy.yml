@@ -273,7 +273,7 @@ jobs:
           echo "Waiting for Azure Load Testing resource to be ready (10 seconds)..."
           sleep 10
 
-      - name: Run load test using Azure Load Testing
+      - name: Create Azure Load Test definition
         run: |
           LOAD_TEST_RESOURCE_NAME="df-loadtest-${{ github.run_id }}"
           cd tests/load
@@ -283,7 +283,6 @@ jobs:
 
           # Define variables
           TEST_ID="test-${{ github.run_id }}"
-          TEST_RUN_ID="run-${{ github.run_id }}"
 
           az version
           # 1. Create the load test definition
@@ -293,8 +292,18 @@ jobs:
             --test-id $TEST_ID \
             --load-test-config-file config-deploy.yaml \
             --test-plan locustfile.py \
+            --test-type Locust \
             --display-name "Durable Function Load Test - ${{ github.run_id }}" \
             --description "Load test for Durable Functions"
+
+      - name: Start Azure Load Test run and monitor
+        run: |
+          LOAD_TEST_RESOURCE_NAME="df-loadtest-${{ github.run_id }}"
+          cd tests/load
+
+          TEST_ID="test-${{ github.run_id }}"
+          TEST_RUN_ID="run-${{ github.run_id }}"
+          az version
 
           # 2. Start the test run
           az load test-run create \
