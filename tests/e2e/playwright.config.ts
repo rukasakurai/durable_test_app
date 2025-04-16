@@ -1,5 +1,7 @@
-module.exports = {
-  testDir: './e2e-tests',
+import { defineConfig, devices } from '@playwright/test';
+
+export default defineConfig({
+  testDir: './specs',
   timeout: 60000,
   use: {
     headless: true,
@@ -9,4 +11,4 @@ module.exports = {
     screenshot: 'only-on-failure',
   },
   reporter: [ ['html'], ['list'] ]
-};
+});

@@ -113,7 +113,7 @@ jobs:
           npx playwright install --with-deps chromium
 
       - name: Run Playwright Tests
-        run: npx playwright test
+        run: npx playwright test --config tests/e2e/playwright.config.ts
 
       - name: Upload Playwright Report
         uses: actions/upload-artifact@v4
