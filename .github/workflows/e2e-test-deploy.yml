@@ -261,6 +261,9 @@ jobs:
       - name: Create Azure Load Testing resource
         run: |
           LOAD_TEST_RESOURCE_NAME="df-loadtest-${{ github.run_id }}"
+          az version
+          az upgrade --yes
+          az version
           az extension add --name load --upgrade
           az load create \
             --name $LOAD_TEST_RESOURCE_NAME \
@@ -282,6 +285,7 @@ jobs:
           TEST_ID="test-${{ github.run_id }}"
           TEST_RUN_ID="run-${{ github.run_id }}"
 
+          az version
           # 1. Create the load test definition
           az load test create \
             --load-test-resource $LOAD_TEST_RESOURCE_NAME \
