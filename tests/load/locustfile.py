@@ -50,6 +50,9 @@ class DurableFunctionUser(HttpUser):
                             except Exception as e:
                                 status_resp.failure(f"Failed to parse status response: {e}")
                                 break
+                        elif status_resp.status_code == 202:
+                            # 202 means still running, treat as success and continue polling
+                            status_resp.success()
                         else:
                             status_resp.failure(f"Failed to get status: {status_resp.status_code}")
                             break
