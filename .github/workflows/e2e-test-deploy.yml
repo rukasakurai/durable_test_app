@@ -235,10 +235,12 @@ jobs:
         run: npx playwright test tests/e2e/specs/durable-function-azure-test.spec.js --config tests/e2e/playwright.config.ts
 
       - name: Install Locust
+        if: github.event_name == 'workflow_dispatch'
         run: |
           pip install locust
 
       - name: Run Locust load test locally
+        if: github.event_name == 'workflow_dispatch'
         run: |
           echo "Running Locust load test locally against deployed function app..."
           cd tests/load
@@ -264,8 +266,8 @@ jobs:
           fi
 
       - name: Upload Locust Results
+        if: github.event_name == 'workflow_dispatch'
         uses: actions/upload-artifact@v4
-        if: always()
         with:
           name: locust-results
           path: tests/load/locust_results_*.csv
@@ -308,7 +310,7 @@ jobs:
         run: |
           LOAD_TEST_RESOURCE_NAME="df-loadtest-${{ github.run_id }}"
           cd tests/load
-          sed "s/{{function_app_name}}/${{ env.FUNCTION_APP_NAME }}/g" config.yaml > config-deploy.yaml
+          sed "s/{{function_app_name}}/${{ env.FUNCTION_APP_NAME }}/g" azure-loadtest-config.yaml > config-deploy.yaml
           TEST_ID="test-${{ github.run_id }}"
           az version
           az load test create \
