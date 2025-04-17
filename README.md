@@ -9,22 +9,22 @@ sequenceDiagram
    autonumber
    participant User
    participant ReactApp
-   participant HttpStart as HttpStart (httpTrigger)
+   participant HttpStart as http_start (httpTrigger)
    participant DurableTaskAPI as Durable Task HTTP API
    participant AzureStorage as Azure Table/Blob Storage
-   participant Orchestrator as ProcessOrchestrator (orchestrationTrigger)
-   participant Activity as CallExternalAPI (activityTrigger)
+   participant Orchestrator as hello_orchestrator (orchestrationTrigger)
+   participant Activity as say_hello (activityTrigger)
    participant AzureStorageQueue as Azure Storage Queue
 
-   User->>ReactApp: Enters input and clicks "Submit"
-   ReactApp->>HttpStart: POST /api/orchestrators/ProcessOrchestrator with {inputData}
+   User->>ReactApp: Clicks "Start Orchestration"
+   ReactApp->>HttpStart: POST /api/orchestrators/hello_orchestrator
    HttpStart->>AzureStorageQueue: Enqueue Start Orchestration Message
-   AzureStorageQueue->>Orchestrator: Start ProcessOrchestrator
+   AzureStorageQueue->>Orchestrator: Start hello_orchestrator
    Orchestrator->>AzureStorage: Store Initial State
    HttpStart-->>ReactApp: Returns Status Query URL
 
    activate Orchestrator
-   Orchestrator->>AzureStorageQueue: Enqueue message to start CallExternalAPI
+   Orchestrator->>AzureStorageQueue: Enqueue message to start say_hello
    AzureStorageQueue->>Activity: Pick up task message
    Activity->>AzureStorage: Store result
    AzureStorage->>AzureStorageQueue: Enqueue completion message

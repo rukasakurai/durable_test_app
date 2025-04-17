@@ -3,10 +3,9 @@ name: Build Frontend and Backend
 on:
   push:
     branches:
-      - main
-  pull_request:
-    branches:
-      - main
+      - "**"
+    paths-ignore:
+      - "README.md"
 
 jobs:
   build-backend:
@@ -57,7 +56,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: 'lts/*' # Use the latest stable LTS version
+          node-version: "lts/*" # Use the latest stable LTS version
 
       - name: Print Node.js version
         run: node -v
