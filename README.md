@@ -93,8 +93,6 @@ Before running this application locally, make sure you have the following instal
    pip install -r requirements.txt
    ```
 
-> **Note:** The Azure Function triggers and all configuration files (host.json, local.settings.json, requirements.txt, package.json, local.settings.json) are now located in the `backend/` directory. All Azure Functions Core Tools commands should be run from the `backend/` directory.
-
 ### Setting Up the Frontend (React)
 
 1. Open a terminal (PowerShell 7 or WSL2).
@@ -307,40 +305,44 @@ Once both the backend and frontend are running:
    https://my-durable-function-app.azurewebsites.net/api/HttpStart  # For Azure deployment
    ```
 
-> **Note:** The backend API endpoints remain the same, but the code is now under the `backend/` directory.
-
 ### Running End-to-End Tests Locally with Playwright
 
-To manually run the E2E tests using Playwright on your Windows PC:
+To manually run the E2E tests using Playwright:
 
 1. Make sure both the Azure Functions backend and the React frontend are running:
 
    - Backend should be running on http://localhost:7071
    - Frontend should be running on http://localhost:3000
 
-2. Open a PowerShell 7 terminal in the project root directory
+2. Open a terminal and navigate to the Playwright E2E test directory:
+
+   ```bash
+   cd tests/e2e
+   ```
 
 3. Install Playwright and its dependencies (if not already installed):
 
-   ```powershell
-   npm install -D @playwright/test
+   ```bash
+   npm install
    npx playwright install --with-deps chromium
    ```
 
 4. Run the Playwright tests:
 
-   ```powershell
+   ```bash
+   npm test
+   # or
    npx playwright test
    ```
 
 5. To run tests with a visible browser (non-headless mode), use:
 
-   ```powershell
+   ```bash
    npx playwright test --headed
    ```
 
 6. To open the HTML report after test execution:
-   ```powershell
+   ```bash
    npx playwright show-report
    ```
 
