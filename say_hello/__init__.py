@@ -1,7 +1,7 @@
 import logging
 import time
 
-def main(prompt) -> str:
+def main(prompt: str) -> str:
     logging.info(f"[say_hello.main] Called at {time.strftime('%Y-%m-%d %H:%M:%S')}")
     time.sleep(1)  # Wait for 1 second to simulate some work
     return (
