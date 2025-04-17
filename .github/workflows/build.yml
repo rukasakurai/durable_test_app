@@ -46,7 +46,6 @@ jobs:
             echo "If you don't have pip-compile, install it with 'pip install pip-tools'."
             exit 1
           fi
-          rm requirements.txt.tmp
 
       - name: Install backend dependencies
         run: |

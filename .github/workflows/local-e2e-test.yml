@@ -51,10 +51,6 @@ jobs:
           echo "Waiting for Azurite to start..."
           sleep 5
 
-      - name: Setup local.settings.json
-        run: |
-          cp backend/local.settings.json backend/local.settings.json # Already in backend, just ensure path is correct
-
       - name: Start Azure Functions
         run: |
           cd backend
