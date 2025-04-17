@@ -241,8 +241,8 @@ jobs:
           # Run locust in headless mode
           locust --host https://${{ env.FUNCTION_APP_NAME }}.azurewebsites.net \
                  --headless \
-                 --users 2 \
-                 --spawn-rate 1 \
+                 --users 100 \
+                 --spawn-rate 100 \
                  --run-time 10s \
                  --csv=locust_results \
                  -f locustfile.py
