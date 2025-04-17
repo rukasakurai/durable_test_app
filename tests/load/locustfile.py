@@ -41,6 +41,7 @@ class DurableFunctionUser(HttpUser):
                         try:
                             status_data = status_resp.json()
                             runtime_status = status_data.get('runtimeStatus')
+                            print(f"Polled status: runtimeStatus={runtime_status}, full response={status_data}")
                             if runtime_status == 'Completed':
                                 status_resp.success()
                                 break
