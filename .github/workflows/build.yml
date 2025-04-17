@@ -51,6 +51,7 @@ jobs:
         run: |
           python -m venv .venv
           . .venv/bin/activate
+          cd backend
           pip install -r requirements.txt
 
       - name: Start backend
