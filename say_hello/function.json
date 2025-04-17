@@ -1,7 +1,7 @@
 {
   "bindings": [
     {
-      "name": "name",
+      "name": "prompt",
       "type": "activityTrigger",
       "direction": "in"
     }

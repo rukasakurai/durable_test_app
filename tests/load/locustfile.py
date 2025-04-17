@@ -20,21 +20,45 @@ class DurableFunctionUser(HttpUser):
 
     @task
     def test_durable_function(self):
-        # Step 1: Start the orchestration
         start_url = self.orchestrator_path
         
         with self.client.post(start_url, 
                              name="Start Orchestration", 
                              catch_response=True) as response:
             if response.status_code == 202:  # Accepted
-                # Extract the statusQueryGetUri for polling from the response headers
-                status_url = response.headers.get('Location')
-                if not status_url:
-                    response.failure("No status URL returned in the Location header")
-                    return
-                
-                # Just log the status URL, but don't poll it
+                # Extract statusQueryGetUri from the response body (JSON)
+                data = response.json()
+                status_url = data.get('statusQueryGetUri')
                 print(f"Received status URL: {status_url}")
+                
+                # Poll the status URL (once, or until completed with timeout)
+                max_wait = 10  # seconds
+                poll_interval = 3  # seconds
+                waited = 0
+                while waited < max_wait:
+                    with self.client.get(status_url, name="Check Status", catch_response=True) as status_resp:
+                        if status_resp.status_code == 200:
+                            try:
+                                status_data = status_resp.json()
+                                runtime_status = status_data.get('runtimeStatus')
+                                print(f"Polled status: runtimeStatus={runtime_status}, full response={status_data}")
+                                if runtime_status == 'Completed':
+                                    status_resp.success()
+                                    break
+                                else:
+                                    status_resp.success()
+                            except Exception as e:
+                                status_resp.failure(f"Failed to parse status response: {e}")
+                                break
+                        elif status_resp.status_code == 202:
+                            # 202 means still running, treat as success and continue polling
+                            status_resp.success()
+                            print("Orchestration still running, will poll again.")
+                        else:
+                            status_resp.failure(f"Failed to get status: {status_resp.status_code}")
+                            break
+                    time.sleep(poll_interval)
+                    waited += poll_interval
                 response.success()
             else:
                 response.failure(f"Failed to start orchestration: {response.status_code}")
