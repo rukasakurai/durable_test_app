@@ -32,8 +32,8 @@ class DurableFunctionUser(HttpUser):
                 print(f"Received status URL: {status_url}")
                 
                 # Poll the status URL (once, or until completed with timeout)
-                max_wait = 11  # seconds
-                poll_interval = 5  # seconds
+                max_wait = 10  # seconds
+                poll_interval = 3  # seconds
                 waited = 0
                 while waited < max_wait:
                     with self.client.get(status_url, name="Check Status", catch_response=True) as status_resp:
@@ -53,6 +53,7 @@ class DurableFunctionUser(HttpUser):
                         elif status_resp.status_code == 202:
                             # 202 means still running, treat as success and continue polling
                             status_resp.success()
+                            print("Orchestration still running, will poll again.")
                         else:
                             status_resp.failure(f"Failed to get status: {status_resp.status_code}")
                             break
