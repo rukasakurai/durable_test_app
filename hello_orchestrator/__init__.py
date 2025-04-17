@@ -5,7 +5,7 @@ def orchestrator_function(context: df.DurableOrchestrationContext):
     instance_id = context.instance_id
     logging.info(f"Orchestrator started. Instance ID: {instance_id}")
     try:
-        yield context.call_activity("say_hello", {"name": "Durable Functions", "instance_id": instance_id})
+        yield context.call_activity("say_hello", "Durable Functions")
         return "Done"
     except Exception as e:
         logging.error(f"Exception in orchestrator. Instance ID: {instance_id}. Error: {e}")
