@@ -36,23 +36,23 @@ class DurableFunctionUser(HttpUser):
                 poll_interval = 5  # seconds
                 waited = 0
                 while waited < max_wait:
-                    status_resp = self.client.get(status_url, name="Check Status", catch_response=True)
-                    if status_resp.status_code == 200:
-                        try:
-                            status_data = status_resp.json()
-                            runtime_status = status_data.get('runtimeStatus')
-                            print(f"Polled status: runtimeStatus={runtime_status}, full response={status_data}")
-                            if runtime_status == 'Completed':
-                                status_resp.success()
+                    with self.client.get(status_url, name="Check Status", catch_response=True) as status_resp:
+                        if status_resp.status_code == 200:
+                            try:
+                                status_data = status_resp.json()
+                                runtime_status = status_data.get('runtimeStatus')
+                                print(f"Polled status: runtimeStatus={runtime_status}, full response={status_data}")
+                                if runtime_status == 'Completed':
+                                    status_resp.success()
+                                    break
+                                else:
+                                    status_resp.success()
+                            except Exception as e:
+                                status_resp.failure(f"Failed to parse status response: {e}")
                                 break
-                            else:
-                                status_resp.success()
-                        except Exception as e:
-                            status_resp.failure(f"Failed to parse status response: {e}")
+                        else:
+                            status_resp.failure(f"Failed to get status: {status_resp.status_code}")
                             break
-                    else:
-                        status_resp.failure(f"Failed to get status: {status_resp.status_code}")
-                        break
                     time.sleep(poll_interval)
                     waited += poll_interval
                 response.success()
