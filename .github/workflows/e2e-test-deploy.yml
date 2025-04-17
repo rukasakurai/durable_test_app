@@ -2,6 +2,12 @@ name: E2E Test with application deployed to Azure
 
 on:
   workflow_dispatch:
+    inputs:
+      skip_cleanup:
+        description: "Skip resource cleanup after workflow run?"
+        required: false
+        default: false
+        type: boolean
   push:
     branches: [main]
     paths-ignore:
@@ -369,7 +375,10 @@ jobs:
   cleanup:
     name: Clean Up Resources
     needs: [infrastructure, testing]
-    if: always()
+    if: |
+      always() && (
+        github.event_name != 'workflow_dispatch' || github.event.inputs.skip_cleanup != 'true'
+      )
     runs-on: ubuntu-latest
     steps:
       - name: Login to Azure
