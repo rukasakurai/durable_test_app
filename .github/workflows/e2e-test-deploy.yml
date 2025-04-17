@@ -123,6 +123,7 @@ jobs:
       - name: Deploy Azure Functions using CLI
         run: |
           echo "Publishing function app using Azure Functions Core Tools..."
+          cd backend
           func azure functionapp publish ${{ env.FUNCTION_APP_NAME }} --python --build-native-deps
 
       # Wait for function app to initialize properly

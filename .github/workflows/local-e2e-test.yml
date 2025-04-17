@@ -52,23 +52,11 @@ jobs:
 
       - name: Setup local.settings.json
         run: |
-          cat > local.settings.json << 'EOF'
-          {
-            "IsEncrypted": false,
-            "Values": {
-              "AzureWebJobsStorage": "UseDevelopmentStorage=true",
-              "FUNCTIONS_WORKER_RUNTIME": "python"
-            },
-            "Host": {
-              "LocalHttpPort": 7071,
-              "CORS": "*",
-              "CORSCredentials": false
-            }
-          }
-          EOF
+          cp backend/local.settings.json backend/local.settings.json # Already in backend, just ensure path is correct
 
       - name: Start Azure Functions
         run: |
+          cd backend
           func start &
           echo "Waiting for Azure Functions to start..."
           sleep 30

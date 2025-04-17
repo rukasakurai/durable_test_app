@@ -89,8 +89,11 @@ Before running this application locally, make sure you have the following instal
      ```
 5. Install the required Python packages:
    ```
+   cd backend
    pip install -r requirements.txt
    ```
+
+> **Note:** The Azure Function triggers and all configuration files (host.json, local.settings.json, requirements.txt, package.json, local.settings.json) are now located in the `backend/` directory. All Azure Functions Core Tools commands should be run from the `backend/` directory.
 
 ### Setting Up the Frontend (React)
 
@@ -137,9 +140,10 @@ azurite
 
    (If you're in the same terminal session from the setup steps, it should already be activated.)
 
-2. In the project root directory, start the Azure Functions host:
+2. In the `backend` directory, start the Azure Functions host:
 
    ```
+   cd backend
    func start
    ```
 
@@ -221,6 +225,7 @@ azurite
 
    ```bash
    # Deploy the function app
+   cd backend
    func azure functionapp publish $FUNCTION_APP_NAME --python
    ```
 
@@ -301,6 +306,8 @@ Once both the backend and frontend are running:
    http://localhost:7071/api/HttpStart  # For local testing
    https://my-durable-function-app.azurewebsites.net/api/HttpStart  # For Azure deployment
    ```
+
+> **Note:** The backend API endpoints remain the same, but the code is now under the `backend/` directory.
 
 ### Running End-to-End Tests Locally with Playwright
 
@@ -410,6 +417,29 @@ After getting your credentials JSON (from either Option 1 or Option 2):
 ### Running the workflow
 
 The workflow will automatically run on pushes to the `main` branch. You can also manually trigger it from the "Actions" tab in your GitHub repository.
+
+## Dependency management for the backend
+
+The backend uses two files for Python dependencies:
+
+- `requirements.in`: Lists top-level dependencies (unpinned). Edit this file to add, update, or remove packages.
+- `requirements.txt`: Contains all dependencies with exact versions, generated from `requirements.in`. This file is used for reproducible installs and CI/CD.
+
+**How to update dependencies:**
+
+1. Edit `backend/requirements.in` to add or change packages.
+2. Run the following command in the `backend/` directory to regenerate `requirements.txt`:
+
+   ```bash
+   pip install pip-tools  # first time only
+   pip-compile requirements.in
+   ```
+
+   Alternatively, you can use `pip freeze > requirements.txt` if you are not using pip-tools, but pip-tools is recommended for this workflow.
+
+3. Commit both `requirements.in` and the updated `requirements.txt` to git.
+
+> **Note:** The CI/CD pipeline will install dependencies from `requirements.txt`. If you change `requirements.in` but do not update and commit `requirements.txt`, the build may fail or use outdated dependencies.
 
 # Recommended Reading
 
