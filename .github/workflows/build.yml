@@ -37,10 +37,11 @@ jobs:
       - name: Check requirements.txt is up to date
         run: |
           pip install pip-tools
-          pip-compile backend/requirements.in --output-file backend/requirements.txt.tmp
-          if ! diff backend/requirements.txt backend/requirements.txt.tmp; then
-            echo "\nERROR: backend/requirements.txt is not up to date with backend/requirements.in."
-            echo "To fix: Run 'pip-compile backend/requirements.in' in the backend directory and commit the updated backend/requirements.txt."
+          cd backend
+          pip-compile requirements.in --output-file requirements.txt.tmp
+          if ! diff requirements.txt requirements.txt.tmp; then
+            echo "\nERROR: requirements.txt is not up to date with requirements.in."
+            echo "To fix: Run 'pip-compile requirements.in' in the backend directory and commit the updated requirements.txt."
             echo "If you don't have pip-compile, install it with 'pip install pip-tools'."
             exit 1
           fi
