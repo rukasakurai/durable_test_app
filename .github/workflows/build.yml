@@ -38,14 +38,15 @@ jobs:
         run: |
           pip install pip-tools
           cd backend
-          pip-compile requirements.in --output-file requirements.txt.tmp
-          if ! diff requirements.txt requirements.txt.tmp; then
+          mv requirements.txt requirements.txt.bak
+          pip-compile requirements.in
+          if ! diff requirements.txt.bak requirements.txt; then
             echo "\nERROR: requirements.txt is not up to date with requirements.in."
             echo "To fix: Run 'pip-compile requirements.in' in the backend directory and commit the updated requirements.txt."
             echo "If you don't have pip-compile, install it with 'pip install pip-tools'."
             exit 1
           fi
-          rm backend/requirements.txt.tmp
+          rm requirements.txt.tmp
 
       - name: Install backend dependencies
         run: |
