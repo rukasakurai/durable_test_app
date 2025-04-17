@@ -34,15 +34,30 @@ jobs:
         run: |
           azurite --silent &
 
+      - name: Check requirements.txt is up to date
+        run: |
+          pip install pip-tools
+          cd backend
+          mv requirements.txt requirements.txt.bak
+          pip-compile requirements.in
+          if ! diff requirements.txt.bak requirements.txt; then
+            echo "\nERROR: requirements.txt is not up to date with requirements.in."
+            echo "To fix: Run 'pip-compile requirements.in' in the backend directory and commit the updated requirements.txt."
+            echo "If you don't have pip-compile, install it with 'pip install pip-tools'."
+            exit 1
+          fi
+
       - name: Install backend dependencies
         run: |
           python -m venv .venv
           . .venv/bin/activate
+          cd backend
           pip install -r requirements.txt
 
       - name: Start backend
         run: |
-          . .venv/bin/activate
+          cd backend
+          . ../.venv/bin/activate
           func host start --no-build --port 7071 &
           sleep 10 # Wait for the backend to initialize
 

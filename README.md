@@ -89,6 +89,7 @@ Before running this application locally, make sure you have the following instal
      ```
 5. Install the required Python packages:
    ```
+   cd backend
    pip install -r requirements.txt
    ```
 
@@ -137,9 +138,10 @@ azurite
 
    (If you're in the same terminal session from the setup steps, it should already be activated.)
 
-2. In the project root directory, start the Azure Functions host:
+2. In the `backend` directory, start the Azure Functions host:
 
    ```
+   cd backend
    func start
    ```
 
@@ -221,6 +223,7 @@ azurite
 
    ```bash
    # Deploy the function app
+   cd backend
    func azure functionapp publish $FUNCTION_APP_NAME --python
    ```
 
@@ -304,36 +307,42 @@ Once both the backend and frontend are running:
 
 ### Running End-to-End Tests Locally with Playwright
 
-To manually run the E2E tests using Playwright on your Windows PC:
+To manually run the E2E tests using Playwright:
 
 1. Make sure both the Azure Functions backend and the React frontend are running:
 
    - Backend should be running on http://localhost:7071
    - Frontend should be running on http://localhost:3000
 
-2. Open a PowerShell 7 terminal in the project root directory
+2. Open a terminal and navigate to the Playwright E2E test directory:
+
+   ```bash
+   cd tests/e2e
+   ```
 
 3. Install Playwright and its dependencies (if not already installed):
 
-   ```powershell
-   npm install -D @playwright/test
+   ```bash
+   npm install
    npx playwright install --with-deps chromium
    ```
 
 4. Run the Playwright tests:
 
-   ```powershell
+   ```bash
+   npm test
+   # or
    npx playwright test
    ```
 
 5. To run tests with a visible browser (non-headless mode), use:
 
-   ```powershell
+   ```bash
    npx playwright test --headed
    ```
 
 6. To open the HTML report after test execution:
-   ```powershell
+   ```bash
    npx playwright show-report
    ```
 
@@ -410,6 +419,29 @@ After getting your credentials JSON (from either Option 1 or Option 2):
 ### Running the workflow
 
 The workflow will automatically run on pushes to the `main` branch. You can also manually trigger it from the "Actions" tab in your GitHub repository.
+
+## Dependency management for the backend
+
+The backend uses two files for Python dependencies:
+
+- `requirements.in`: Lists top-level dependencies (unpinned). Edit this file to add, update, or remove packages.
+- `requirements.txt`: Contains all dependencies with exact versions, generated from `requirements.in`. This file is used for reproducible installs and CI/CD.
+
+**How to update dependencies:**
+
+1. Edit `backend/requirements.in` to add or change packages.
+2. Run the following command in the `backend/` directory to regenerate `requirements.txt`:
+
+   ```bash
+   pip install pip-tools  # first time only
+   pip-compile requirements.in
+   ```
+
+   Alternatively, you can use `pip freeze > requirements.txt` if you are not using pip-tools, but pip-tools is recommended for this workflow.
+
+3. Commit both `requirements.in` and the updated `requirements.txt` to git.
+
+> **Note:** The CI/CD pipeline will install dependencies from `requirements.txt`. If you change `requirements.in` but do not update and commit `requirements.txt`, the build may fail or use outdated dependencies.
 
 # Recommended Reading
 
