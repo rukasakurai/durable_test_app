@@ -330,8 +330,6 @@ To manually run the E2E tests using Playwright:
 4. Run the Playwright tests:
 
    ```bash
-   npm test
-   # or
    npx playwright test
    ```
 
